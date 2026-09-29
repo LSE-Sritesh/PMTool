@@ -1,4 +1,6 @@
-# Sitebook, product requirements
+# Project Management Tool, product requirements
+
+Renamed from Sitebook on 29 September 2026 at the owner's request. The name on screen, in the server window and in these documents has changed. File names and settings keep the old word (`sitebook.config.json`, the `SITEBOOK_` settings), because renaming those changes nothing a user sees.
 
 Project management tool for SEMBA Malaysia Design & Construction Sdn. Bhd., a spatial design and fit-out firm in Kuala Lumpur.
 Owner Sritesh Naidu, AI Lead, Lemon Sky Edge. Built as a concept prototype for a client pitch, now being taken forward as a real local application.
@@ -63,6 +65,7 @@ Client (new). company, brand, pic, phone, email, type, area, venue, open, source
 ### 4.1 Today
 KPI tiles (live projects, at risk, approvals waiting, claims overdue, site check-ins today). Needs attention list built from every project's `risk` line plus every flagged site check-in, blocking items first. Site team right now. Live project cards.
 Header shows the real date. All sample dates shift with the real date (see section 6).
+Run from the local server, the top right shows a save status ("Changes saved on this computer" or "Not saved") and a Clear saved changes button (see section 7.2). Opened as a file, neither appears.
 
 ### 4.2 Projects
 Card grid with filters (all, at risk, on site, design and submission, handed over). Click opens the detail. Detail has the phase stepper with planned dates, a risk banner, Milestones, Money (contract sum, committed, claimed, approved variations, uncommitted, with a bar), Team, then tabs. Updates is the single thread where PM, sales and client post, with a compose box that lets the demo post as any of the three. Variations is a priced table with a total. Snags can be marked fixed. Site log filters check-ins for this project. Approvals filters the queue for this project.
@@ -126,6 +129,16 @@ Built 29 September 2026, in `server.js`. What differs from the recommendation ab
 ### 7.2 Persistence
 Everything is in memory. Reloading loses new clients, check-ins, posts and quotations. Store state as JSON on disk through the same server (`data/state.json`), read on boot, written on every change. Pros, zero setup, human readable, easy to back up. Cons, no concurrency, two people editing at once will overwrite each other. Acceptable for a single office pilot. Move to SQLite when a second concurrent user appears.
 
+Built 29 September 2026, in `server.js` (`GET` and `PUT /api/state`) and the saved changes block near the end of `index.html`.
+1. What is saved. New clients, thread posts, site check-ins, approvals marked done, snags marked fixed, and issued quotations (header, lines and total).
+2. What is not saved. The sample data, which stays in `index.html` and keeps shifting with the date engine. Saved records carry real dates and are laid over the sample at boot. A quotation that is drafted but not issued is not saved.
+3. Where. `data/state.json`, written in a readable layout. The save before the latest one is kept as `data/state.prev.json`, one step of undo. The `data` folder is ignored by git.
+4. Two windows. Every save carries a revision number. A window holding an older revision is refused, shows "Not saved", and asks for a reload. Nothing is overwritten silently.
+5. Damaged file. If `data/state.json` cannot be read, the server refuses to load or save and never overwrites it. The page runs on sample data and shows "Not saved".
+6. Earlier days. A check-in saved on an earlier day shows in that project's Site log with its date. It does not count in Today or the Site team screen.
+7. Clear saved changes. A button on Today, two clicks to confirm, empties the saved data and reloads. Folders on disk are not touched. Meant for resetting before a demo.
+8. Known limit. Saved records point at projects by id. If a sample project's id is changed in `index.html`, its saved posts and check-ins stop showing.
+
 ### 7.3 Quotation export
 `window.print()` is blocked in the artifact viewer but works from `localhost`. Add a print stylesheet that hides the rail, the header form and the line editor, and prints only `#qPaper` on A4 with page breaks avoided inside section groups. Save a PDF copy into `03 Quotation and BOQ` of the client folder through the server. Then add a quotation register (number, project, date, total, status) so the number sequence survives reloads.
 
@@ -152,13 +165,13 @@ Integrations with Google or Microsoft (suite unknown). WhatsApp (Meta business A
 
 ## 9. State of the build on 29 September 2026
 
-Built and working in `server.js`. Local server with folder creation on disk (7.1).
+Built and working in `server.js`. Local server with folder creation on disk (7.1) and saving to `data/state.json` (7.2).
 
 Built and working in `index.html`. Today, Projects with detail, Timeline, Site team with check-in form, Approvals with chase and done, Quotation with template, live totals, generate, copy and issue, New client with code, folder preview, commands and project creation, Assistant with four samples. Live date engine. Dark theme. Phone layout.
 
-Not built. Persistence (7.2), print and PDF (7.3), client view (7.4), photo upload (7.5), live model (7.6).
+Not built. Print and PDF (7.3), client view (7.4), photo upload (7.5), live model (7.6).
 
-Known rough edges. Weekday words in sample copy move with the date engine and are not always a Friday. The Gantt shows the current phase's red outline only, not earlier late phases. The quotation number resets on reload, and so does the client code when the page is opened without the server. Projects created in the page are still lost on reload even though their folders stay on disk (7.2 fixes this). Marking an approval done does not clear the matching risk line or status on the project. The header form on the quotation screen is 4 columns and drops to 2 under 900px.
+Known rough edges. Weekday words in sample copy move with the date engine and are not always a Friday. The Gantt shows the current phase's red outline only, not earlier late phases. Opened without the server nothing is saved, so the quotation number, the client code and anything added reset on reload. Marking an approval done does not clear the matching risk line or status on the project. The header form on the quotation screen is 4 columns and drops to 2 under 900px.
 
 Open questions that block work, all still unanswered by SEMBA. Office suite. Whether Tokyo HQ mandates a system. Sales headcount. Where the shared drive lives (local server, NAS, Google Drive, OneDrive), which decides where 7.1 writes.
 

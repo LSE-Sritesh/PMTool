@@ -1,4 +1,6 @@
-# Sitebook, working notes for Claude Code
+# Project Management Tool, working notes for Claude Code
+
+The tool was called Sitebook until 29 September 2026. File names and settings still use the old word (`sitebook.config.json`, `SITEBOOK_` settings). Use the new name in anything a person reads.
 
 Read `PRD.md` first. It holds the domain model, every screen, the design tokens, the date engine and the build order. This file is the short version plus the rules that are easy to break.
 
@@ -7,7 +9,7 @@ A single-file project management prototype for SEMBA Malaysia, a fit-out firm in
 
 ## Start here
 1. Run `node server.js` and open `http://localhost:3000` (or open `index.html` as a file) and click through all eight tabs so you know what exists.
-2. PRD 7.1 is built. `server.js` creates client folders on disk, with no dependencies. Next job is 7.2, persistence.
+2. PRD 7.1 and 7.2 are built. `server.js` creates client folders on disk and saves what the user adds to `data/state.json`, with no dependencies. Next job is 7.3, quotation export.
 3. Keep `index.html` working as a standalone file. The server adds capability, it must not become a requirement.
 
 ## Layout of index.html
@@ -25,6 +27,8 @@ Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme bl
 9. `FOLDERS` and `safeName()` exist in both `index.html` and `server.js`. Change both together.
 10. Anything from data or a form goes through `esc()` before it reaches `innerHTML`.
 11. `Clients/` and `data/` are ignored by git because they can hold real client details. Keep it that way.
+12. Only what the user adds is saved, never the sample data. The lists are `STATE` in `index.html` and `STATE_KEYS` in `server.js`. A new kind of record goes in both, plus `applyState()`.
+13. Anything that changes data calls `keep()` so it is saved. Screens about today read `todayLog()`, not `LOG`, because `LOG` also holds saved check-ins from earlier days.
 
 ## Owner
 Sritesh Naidu, AI Lead, Lemon Sky Edge. He is the trainer selling SEMBA an AI course, this tool is the demo and the seed of a solutions engagement. When in doubt about scope, the question is "does this help him show capability without promising what Lemon Sky has not agreed to build".

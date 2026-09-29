@@ -1,14 +1,17 @@
-// Sitebook local server (PRD 7.1). No dependencies, run with "node server.js".
-// Serves index.html and creates the client folder set on disk.
+// Project Management Tool, local server (PRD 7.1 and 7.2). No dependencies, run with "node server.js".
+// Serves index.html, creates the client folder set on disk, and saves what the user adds to data/state.json.
 // Listens on this computer only. index.html still works on its own without it.
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 
+const APP_NAME = "Project Management Tool";
 const APP_DIR = __dirname;
-const DEFAULTS = { port: 3000, clientsRoot: "Clients" };
+const DEFAULTS = { port: 3000, clientsRoot: "Clients", dataDir: "data" };
 const MAX_BODY = 64 * 1024;
+const MAX_STATE = 1024 * 1024;
+const MAX_ROWS = 5000;
 
 // Keep in step with FOLDERS in index.html
 const FOLDERS = [
@@ -21,6 +24,9 @@ const FOLDERS = [
   "07 Claims and invoices",
   "08 Handover and DLP",
 ];
+
+// What the page is allowed to save. Sample data is never saved, it lives in index.html.
+const STATE_KEYS = ["projects", "posts", "checkins", "apprDone", "snagsFixed", "quotes"];
 
 function loadConfig() {
   const file = path.join(APP_DIR, "sitebook.config.json");
@@ -35,7 +41,12 @@ function loadConfig() {
   }
   const port = Number(process.env.SITEBOOK_PORT || cfg.port) || DEFAULTS.port;
   const root = process.env.SITEBOOK_CLIENTS_ROOT || cfg.clientsRoot || DEFAULTS.clientsRoot;
-  return { port, clientsRoot: path.resolve(APP_DIR, String(root)) };
+  const data = process.env.SITEBOOK_DATA_DIR || cfg.dataDir || DEFAULTS.dataDir;
+  return {
+    port,
+    clientsRoot: path.resolve(APP_DIR, String(root)),
+    dataDir: path.resolve(APP_DIR, String(data)),
+  };
 }
 
 // Same rules as safeName() in index.html
@@ -82,14 +93,24 @@ function send(res, status, body) {
   res.end(text);
 }
 
-function readJson(req) {
+function fail(status, error, extra) {
+  return Object.assign({ status, error }, extra);
+}
+
+function readJson(req, max) {
   return new Promise((resolve, reject) => {
+    if (!/^application\/json\b/i.test(req.headers["content-type"] || "")) {
+      return reject(fail(415, "Send the request as JSON."));
+    }
+    if (Number(req.headers["content-length"]) > max) {
+      return reject(fail(413, "That request is too large."));
+    }
     const chunks = [];
     let size = 0;
     req.on("data", (c) => {
       size += c.length;
-      if (size > MAX_BODY) {
-        reject({ status: 413, error: "That request is too large." });
+      if (size > max) {
+        reject(fail(413, "That request is too large."));
         req.destroy();
         return;
       }
@@ -101,12 +122,14 @@ function readJson(req) {
         if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("not an object");
         resolve(data);
       } catch (e) {
-        reject({ status: 400, error: "The request was not valid JSON." });
+        reject(fail(400, "The request was not valid JSON."));
       }
     });
-    req.on("error", () => reject({ status: 400, error: "The request could not be read." }));
+    req.on("error", () => reject(fail(400, "The request could not be read.")));
   });
 }
+
+// ---------- client folders (PRD 7.1) ----------
 
 function projectSheet(code, brand, b) {
   const rows = [
@@ -128,7 +151,7 @@ function projectSheet(code, brand, b) {
   return [
     `# ${code} ${brand}, project sheet`,
     "",
-    `Created ${today} by Sitebook.`,
+    `Created ${today} by the ${APP_NAME}.`,
     "",
     "| Field | Detail |",
     "|---|---|",
@@ -142,14 +165,7 @@ function projectSheet(code, brand, b) {
 }
 
 async function createClient(req, res, cfg) {
-  if (!/^application\/json\b/i.test(req.headers["content-type"] || "")) {
-    return send(res, 415, { ok: false, error: "Send the client as JSON." });
-  }
-  if (Number(req.headers["content-length"]) > MAX_BODY) {
-    res.setHeader("Connection", "close");
-    return send(res, 413, { ok: false, error: "That request is too large." });
-  }
-  const b = await readJson(req);
+  const b = await readJson(req, MAX_BODY);
   const code = String(b.code || "");
   if (!/^SMB-\d{4}-\d{3,6}$/.test(code)) {
     return send(res, 400, { ok: false, error: "The client code must look like SMB-2026-007." });
@@ -186,6 +202,61 @@ async function createClient(req, res, cfg) {
   send(res, 201, { ok: true, code, name, folder, created, sheet, nextSeq: nextSeq(root) });
 }
 
+// ---------- saved changes (PRD 7.2) ----------
+
+function emptyState() {
+  return Object.fromEntries(STATE_KEYS.map((k) => [k, []]));
+}
+
+// Keeps the known lists only, and checks each row is the plain shape the page writes
+function cleanState(s) {
+  if (!s || typeof s !== "object" || Array.isArray(s)) throw fail(400, "The saved data must be an object.");
+  const out = emptyState();
+  for (const k of STATE_KEYS) {
+    const rows = s[k] === undefined ? [] : s[k];
+    if (!Array.isArray(rows) || rows.length > MAX_ROWS) throw fail(400, `The list "${k}" is not valid.`);
+    for (const r of rows) {
+      const ok = k === "apprDone" ? Number.isFinite(r) : r && typeof r === "object" && !Array.isArray(r);
+      if (!ok) throw fail(400, `The list "${k}" holds a row that is not valid.`);
+    }
+    out[k] = rows;
+  }
+  return out;
+}
+
+function readState(cfg) {
+  const file = path.join(cfg.dataDir, "state.json");
+  if (!fs.existsSync(file)) return { rev: 0, state: emptyState() };
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+    return { rev: Number(raw.rev) || 0, state: cleanState(raw.state) };
+  } catch (e) {
+    // Never overwrite a file we could not read, the owner may want what is in it
+    throw fail(500, "The saved data file could not be read. Fix or remove data/state.json, then reload.");
+  }
+}
+
+async function saveState(req, res, cfg) {
+  const b = await readJson(req, MAX_STATE);
+  const current = readState(cfg);
+  if (Number(b.rev) !== current.rev) {
+    return send(res, 409, { ok: false, error: "The saved data was changed in another window.", rev: current.rev });
+  }
+  const state = cleanState(b.state);
+  const rev = current.rev + 1;
+
+  fs.mkdirSync(cfg.dataDir, { recursive: true });
+  const file = path.join(cfg.dataDir, "state.json");
+  const tmp = file + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify({ version: 1, rev, savedAt: new Date().toISOString(), state }, null, 2));
+  // One step of undo. The save before this one is kept beside it.
+  if (fs.existsSync(file)) fs.copyFileSync(file, path.join(cfg.dataDir, "state.prev.json"));
+  fs.renameSync(tmp, file);
+  send(res, 200, { ok: true, rev });
+}
+
+// ---------- server ----------
+
 function serveIndex(req, res) {
   fs.readFile(path.join(APP_DIR, "index.html"), (err, buf) => {
     if (err) {
@@ -208,8 +279,8 @@ function makeHandler(cfg) {
   return async (req, res) => {
     try {
       // Only answer requests addressed to this computer, and only from this page
-      if (!hosts.has(req.headers.host || "")) return send(res, 403, { ok: false, error: "Open Sitebook at localhost." });
-      if (req.headers.origin && !origins.has(req.headers.origin)) return send(res, 403, { ok: false, error: "Requests must come from Sitebook." });
+      if (!hosts.has(req.headers.host || "")) return send(res, 403, { ok: false, error: "Open the tool at localhost." });
+      if (req.headers.origin && !origins.has(req.headers.origin)) return send(res, 403, { ok: false, error: "Requests must come from the tool's own page." });
 
       const url = new URL(req.url, "http://localhost").pathname;
       const read = req.method === "GET" || req.method === "HEAD";
@@ -219,15 +290,22 @@ function makeHandler(cfg) {
         return send(res, 200, {
           ok: true,
           app: "sitebook",
+          store: true,
           clientsRoot: cfg.clientsRoot + path.sep,
           nextSeq: nextSeq(cfg.clientsRoot),
         });
       }
+      if (read && url === "/api/state") return send(res, 200, Object.assign({ ok: true }, readState(cfg)));
+      if (req.method === "PUT" && url === "/api/state") return await saveState(req, res, cfg);
       if (req.method === "POST" && url === "/api/clients") return await createClient(req, res, cfg);
 
       send(res, 404, { ok: false, error: "Not found." });
     } catch (e) {
-      if (e && e.status) return send(res, e.status, { ok: false, error: e.error });
+      if (e && e.status) {
+        if (e.status === 413) res.setHeader("Connection", "close");
+        const { status, ...rest } = e;
+        return send(res, status, Object.assign({ ok: false }, rest));
+      }
       console.error(e);
       send(res, 500, { ok: false, error: "The server could not finish that. " + (e && e.code ? e.code : "See the server window.") });
     }
@@ -248,13 +326,14 @@ function main() {
 
   const v4 = http.createServer(handler);
   v4.on("error", (e) => {
-    if (e.code === "EADDRINUSE") console.error(`Port ${cfg.port} is already in use. Close the other Sitebook window, or change "port" in sitebook.config.json.`);
+    if (e.code === "EADDRINUSE") console.error(`Port ${cfg.port} is already in use. Close the other window running the tool, or change "port" in sitebook.config.json.`);
     else console.error(e.message);
     process.exit(1);
   });
   v4.listen(cfg.port, "127.0.0.1", () => {
-    console.log(`Sitebook is running at ${url}`);
+    console.log(`${APP_NAME} is running at ${url}`);
     console.log(`Client folders go in ${cfg.clientsRoot}`);
+    console.log(`Changes are saved in ${path.join(cfg.dataDir, "state.json")}`);
     console.log("Press Ctrl+C to stop.");
     if (process.argv.includes("--open")) openBrowser(url);
   });
@@ -266,4 +345,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { safeName, inside, nextSeq, FOLDERS };
+module.exports = { safeName, inside, nextSeq, cleanState, FOLDERS };

@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SEMBA Sitebook</title>
+<title>SEMBA Project Management Tool</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
@@ -33,7 +33,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .rail{background:var(--rail);color:var(--railtext);padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:env(safe-area-inset-top,0px);height:100vh}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;color:var(--onfill)}
 .brand .mark{width:34px;height:34px;border-radius:8px;background:var(--bronze);display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:20px;color:var(--navy2)}
-.brand b{font-size:16px;letter-spacing:.04em}
+.brand b{display:block;font-size:14.5px;line-height:1.2;letter-spacing:.02em;text-wrap:balance}
 .brand small{display:block;font-size:11px;color:var(--railtext);letter-spacing:.12em;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 10px;color:var(--railtext);cursor:pointer;font-weight:600}
@@ -201,7 +201,7 @@ tr:last-child td{border-bottom:0}
 
 <div class="app">
   <aside class="rail">
-    <div class="brand"><div class="mark">S</div><div><b>Sitebook</b><small>SEMBA Malaysia</small></div></div>
+    <div class="brand"><div class="mark">S</div><div><b>Project Management Tool</b><small>SEMBA Malaysia</small></div></div>
     <nav class="nav" id="nav">
       <button data-v="overview" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg><span class="tx">Today</span></button>
       <button data-v="projects"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg><span class="tx">Projects</span><span class="n" id="nProj"></span></button>
@@ -220,7 +220,7 @@ tr:last-child td{border-bottom:0}
     <section class="view on" id="v-overview">
       <div class="topbar">
         <div><div class="eyebrow">Today</div><h1 class="title" data-today-long></h1></div>
-        <span class="sample">&#9679; Sample data</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill" id="saveMark" hidden></span><button class="btn sm ghost" id="btnClearSaved" hidden title="Removes the clients, posts, check-ins and quotations saved in this tool. Folders on disk are not touched.">Clear saved changes</button><span class="sample">&#9679; Sample data</span></div>
       </div>
       <div class="grid kpis" id="kpis"></div>
       <div class="grid two" style="margin-top:14px">
@@ -535,18 +535,18 @@ function renderOverview(){
   const openAppr=APPR.filter(a=>a.state==="open"), ours=openAppr.filter(a=>a.side==="ours").length;
   const due=openAppr.filter(a=>a.type==="Progress claim"&&a.days>0), claims=due.reduce((s,a)=>s+(a.amount||0),0);
   const dueText=!due.length?"None overdue":due.length===1?pj(due[0].proj).name.split(" ")[0]+", "+due[0].item.split(",")[0].replace(/^Progress /,"")+", "+due[0].days+" days":due.length+" claims, oldest "+Math.max(...due.map(a=>a.days))+" days";
-  const pl=(n,w)=>n+" "+w+(n===1?"":"s"), coords=new Set(LOG.map(l=>l.who)).size, sites=new Set(LOG.map(l=>l.proj)).size;
+  const pl=(n,w)=>n+" "+w+(n===1?"":"s"), tl=todayLog(), coords=new Set(tl.map(l=>l.who)).size, sites=new Set(tl.map(l=>l.proj)).size;
   $("#kpis").innerHTML=[
-    ["Live projects",live,"of "+P.length+" in portfolio","blue"],["At risk",risk,"need a decision this week",risk?"bad":"ok"],["Approvals waiting",openAppr.length,ours+" waiting on SEMBA",""],["Claims overdue",fmtRM(claims).replace("RM ","RM&nbsp;"),esc(dueText),due.length?"warn":"ok"],["Site check-ins today",LOG.length,pl(coords,"coordinator")+", "+pl(sites,"site"),"ok"]
+    ["Live projects",live,"of "+P.length+" in portfolio","blue"],["At risk",risk,"need a decision this week",risk?"bad":"ok"],["Approvals waiting",openAppr.length,ours+" waiting on SEMBA",""],["Claims overdue",fmtRM(claims).replace("RM ","RM&nbsp;"),esc(dueText),due.length?"warn":"ok"],["Site check-ins today",tl.length,pl(coords,"coordinator")+", "+pl(sites,"site"),"ok"]
   ].map(([l,v,d,c])=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
   $("#nProj").textContent=live;$("#nAppr").textContent=openAppr.length;
   const att=[];
   P.forEach(p=>{if(p.risk)att.push({s:p.status,t:p.name,m:p.risk,r:PHASES[p.phase],id:p.id})});
-  LOG.filter(l=>l.flag).forEach(l=>att.push({s:l.flag,t:pj(l.proj).name+", site flag from "+TEAM[l.who].n,m:l.flagText,r:l.time,id:l.proj}));
+  tl.filter(l=>l.flag).forEach(l=>att.push({s:l.flag,t:pj(l.proj).name+", site flag from "+TEAM[l.who].n,m:l.flagText,r:l.time,id:l.proj}));
   att.sort((a,b)=>(a.s==="bad"?0:1)-(b.s==="bad"?0:1));
   $("#attnCount").textContent=att.length+" items";
   $("#attention").innerHTML=att.map(a=>`<div class="row" data-open="${a.id}" style="cursor:pointer"><span class="stripe ${a.s}"></span><div><div class="t">${esc(a.t)}</div><div class="m">${esc(a.m)}</div></div><div class="r">${a.r}</div></div>`).join("");
-  $("#siteNow").innerHTML=LOG.slice().reverse().map(l=>`<div class="row"><span class="av ${TEAM[l.who].c}" style="margin:0">${ini(l.who)}</span><div><div class="t">${TEAM[l.who].n} at ${esc(pj(l.proj).name)}</div><div class="m">${esc(l.note.slice(0,90))}${l.note.length>90?"…":""}</div></div><div class="r">${l.time}<br>${l.photos} photos</div></div>`).join("");
+  $("#siteNow").innerHTML=tl.reverse().map(l=>`<div class="row"><span class="av ${TEAM[l.who].c}" style="margin:0">${ini(l.who)}</span><div><div class="t">${TEAM[l.who].n} at ${esc(pj(l.proj).name)}</div><div class="m">${esc(l.note.slice(0,90))}${l.note.length>90?"…":""}</div></div><div class="r">${l.time}<br>${l.photos} photos</div></div>`).join("");
   renderCards("#ovCards","all");
 }
 
@@ -587,12 +587,12 @@ function renderDetailTab(p){
   if(detailTab==="updates"){
     b.innerHTML=`<div class="thread">${p.thread.map(([r,w,t,m])=>`<div class="msg ${r}"><span class="av ${r==="client"?"":r==="sales"?"b":""}" style="${r==="client"?"background:var(--bluewash);color:var(--blue2)":""}">${esc(w.split(" ").map(s=>s[0]).join("").slice(0,2))}</span><div class="bub"><div class="who">${esc(w)}<span>${r==="client"?"Client":r==="sales"?"Sales":"Project manager"} · ${esc(t)}</span></div><p>${esc(m)}</p></div></div>`).join("")||"<div class='sub'>No messages yet.</div>"}</div>
     <form class="compose" id="composeForm"><select id="composeAs"><option value="pm">As ${TEAM[p.pm].n} (PM)</option>${p.sales?`<option value="sales">As ${TEAM[p.sales].n} (Sales)</option>`:""}<option value="client">As client</option></select><input id="composeText" placeholder="Write an update everyone on this project can see"><button class="btn primary" type="submit">Post</button></form>`;
-    $("#composeForm").onsubmit=e=>{e.preventDefault();const v=$("#composeText").value.trim();if(!v)return;const as=$("#composeAs").value;const name=as==="pm"?TEAM[p.pm].n:as==="sales"?TEAM[p.sales].n:p.client.split(",")[0];p.thread.push([as,name,"Now",v]);renderDetailTab(p);toast("Posted to the project thread.")};
+    $("#composeForm").onsubmit=e=>{e.preventDefault();const v=$("#composeText").value.trim();if(!v)return;const as=$("#composeAs").value;const name=as==="pm"?TEAM[p.pm].n:as==="sales"?TEAM[p.sales].n:p.client.split(",")[0];p.thread.push([as,name,"Now",v]);keep("posts",{proj:p.id,role:as,name,at:new Date().toISOString(),text:v});renderDetailTab(p);toast("Posted to the project thread.")};
   } else if(detailTab==="vos"){
     b.innerHTML=p.vos.length?`<div class="tw"><table><thead><tr><th>Ref</th><th>Description</th><th class="num">Amount</th><th>Status</th></tr></thead><tbody>${p.vos.map(([r,dsc,a,s])=>`<tr><td><b>${esc(r)}</b></td><td>${esc(dsc)}</td><td class="num">${fmtRM(+a)}</td><td><span class="pill ${s.startsWith("Await")?"warn":"ok"}">${esc(s)}</span></td></tr>`).join("")}<tr><td></td><td><b>Total variations</b></td><td class="num"><b>${fmtRM(p.vos.reduce((s,v)=>s+ +v[2],0))}</b></td><td></td></tr></tbody></table></div><p class="sub" style="font-size:12.5px;margin-top:10px">Every variation is priced and approved here before the site does the work. That is where fit-out margin usually leaks.</p>`:`<div class="sub">No variations yet. Priced changes appear here before the site does the work.</div>`;
   } else if(detailTab==="snags"){
     b.innerHTML=p.snags.length?`<div class="list">${p.snags.map(([t,s],i)=>`<div class="row" style="align-items:center"><span class="stripe ${s==="open"?"warn":"ok"}"></span><div class="t" style="font-weight:600;${s==="closed"?"color:var(--ink3);text-decoration:line-through":""}">${esc(t)}</div><div class="r">${s==="open"?`<button class="btn sm" data-snag="${i}">Mark fixed</button>`:'<span class="pill ok">Fixed</span>'}</div></div>`).join("")}</div>`:`<div class="sub">No snags recorded. The snag list opens at practical completion.</div>`;
-    b.querySelectorAll("[data-snag]").forEach(x=>x.onclick=()=>{p.snags[+x.dataset.snag][1]="closed";renderDetailTab(p);toast("Snag marked fixed.")});
+    b.querySelectorAll("[data-snag]").forEach(x=>x.onclick=()=>{p.snags[+x.dataset.snag][1]="closed";keep("snagsFixed",{proj:p.id,title:p.snags[+x.dataset.snag][0]});renderDetailTab(p);toast("Snag marked fixed.")});
   } else if(detailTab==="site"){
     const l=LOG.filter(x=>x.proj===p.id);
     b.innerHTML=l.length?`<div class="log">${l.map(logRow).join("")}</div>`:`<div class="sub">No site check-ins yet. Site log starts at site possession.</div>`;
@@ -625,21 +625,21 @@ function renderGantt(){
 }
 
 // ---------- site ----------
-function logRow(l){return `<div class="row"><span class="stripe ${l.flag||"ok"}"></span><div><div class="t">${TEAM[l.who].n} · ${esc(pj(l.proj).name)}<span style="font-weight:500;color:var(--ink3)"> · ${esc(pj(l.proj).venue)}</span></div><div class="m">${esc(l.note)}</div>${l.flagText?`<div class="m" style="color:${l.flag==="bad"?"var(--bad)":"var(--warnink)"};font-weight:700;margin-top:4px">${esc(l.flagText)}</div>`:""}<div class="photos">${Array.from({length:l.photos},(_,i)=>`<span>IMG ${i+1}</span>`).join("")}</div></div><div class="r">${l.time}</div></div>`}
+function logRow(l){return `<div class="row"><span class="stripe ${l.flag||"ok"}"></span><div><div class="t">${TEAM[l.who].n} · ${esc(pj(l.proj).name)}<span style="font-weight:500;color:var(--ink3)"> · ${esc(pj(l.proj).venue)}</span></div><div class="m">${esc(l.note)}</div>${l.flagText?`<div class="m" style="color:${l.flag==="bad"?"var(--bad)":"var(--warnink)"};font-weight:700;margin-top:4px">${esc(l.flagText)}</div>`:""}<div class="photos">${Array.from({length:l.photos},(_,i)=>`<span>IMG ${i+1}</span>`).join("")}</div></div><div class="r">${l.day&&l.day!==dayKey(TODAY)?fmtD(l.day)+"<br>":""}${l.time}</div></div>`}
 function renderSite(){
   const people=["farah","kumar"];
   $("#whoWhere").innerHTML=people.map(k=>{
-    const stops=LOG.filter(l=>l.who===k);
+    const stops=todayLog().filter(l=>l.who===k);
     const planned={farah:[["15:30","hana","Cover for Kumar, glazier quote"]],kumar:[["16:00","aoi","Return, check carpenter headcount"]]}[k]||[];
     return `<div class="person"><div class="top"><span class="av ${TEAM[k].c}">${ini(k)}</span><div><div class="t" style="font-weight:800">${TEAM[k].n}</div><div class="role">${TEAM[k].r} · ${stops.length} check-ins today</div></div><span class="pill ok" style="margin-left:auto"><i></i>On site</span></div>
     <div class="stops">${stops.map(s=>`<div class="stop"><span class="tm">${s.time}</span><span>${esc(pj(s.proj).name)}<span style="color:var(--ink3)"> · ${esc(pj(s.proj).venue.split(",")[0])}</span></span><span class="st ok"></span></div>`).join("")}${planned.map(([t,pr,n])=>`<div class="stop"><span class="tm">${t}</span><span>${esc(pj(pr).name)}<span style="color:var(--ink3)"> · ${esc(n)}</span></span><span class="st now"></span></div>`).join("")}</div></div>`}).join("");
-  $("#ciCount").textContent=LOG.length+" today";
-  $("#siteLog").innerHTML=LOG.slice().reverse().map(logRow).join("");
+  $("#ciCount").textContent=todayLog().length+" today";
+  $("#siteLog").innerHTML=todayLog().reverse().map(logRow).join("");
 }
 $("#btnCheckin").onclick=()=>{$("#checkinForm").hidden=false;$("#ciNote").focus()};
 $("#btnCancelCheckin").onclick=()=>{$("#checkinForm").hidden=true};
 $("#ciProj").innerHTML=P.filter(p=>p.phase>=3).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
-$("#formCheckin").onsubmit=e=>{e.preventDefault();const who=$("#ciWho").value.toLowerCase();const note=$("#ciNote").value.trim();if(!note)return;const fl=$("#ciFlag").value;const now=new Date();LOG.push({who,proj:$("#ciProj").value,time:now.toTimeString().slice(0,5),note,flag:fl,flagText:fl==="bad"?"Blocking. Flagged from site.":fl==="warn"?"Needs a decision. Flagged from site.":"",photos:0});$("#ciNote").value="";$("#checkinForm").hidden=true;renderSite();renderOverview();toast("Check-in saved"+(fl?" and flagged on Today.":"."))};
+$("#formCheckin").onsubmit=e=>{e.preventDefault();const who=$("#ciWho").value.toLowerCase();const note=$("#ciNote").value.trim();if(!note)return;const fl=$("#ciFlag").value;const now=new Date();const ci={who,proj:$("#ciProj").value,note,flag:fl,flagText:fl==="bad"?"Blocking. Flagged from site.":fl==="warn"?"Needs a decision. Flagged from site.":"",photos:0};LOG.push({...ci,time:now.toTimeString().slice(0,5),day:dayKey(now)});keep("checkins",{...ci,at:now.toISOString()});$("#ciNote").value="";$("#checkinForm").hidden=true;renderSite();renderOverview();toast("Check-in saved"+(fl?" and flagged on Today.":"."))};
 
 // ---------- approvals ----------
 let apprF="open";
@@ -649,7 +649,7 @@ function renderAppr(){
   $("#nAppr").textContent=APPR.filter(a=>a.state==="open").length;
 }
 $("#apprFilter").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;apprF=b.dataset.f;document.querySelectorAll("#apprFilter .chip").forEach(x=>x.classList.toggle("on",x===b));renderAppr()});
-$("#apprTable").addEventListener("click",e=>{const d=e.target.closest("[data-done]"),c=e.target.closest("[data-chase]");if(d){APPR.find(a=>a.id==d.dataset.done).state="done";renderAppr();renderOverview();toast("Marked done.")}if(c){const a=APPR.find(x=>x.id==c.dataset.chase);toast("Sample only. Nothing was sent to "+a.on.split(" (")[0]+".")}});
+$("#apprTable").addEventListener("click",e=>{const d=e.target.closest("[data-done]"),c=e.target.closest("[data-chase]");if(d){APPR.find(a=>a.id==d.dataset.done).state="done";keep("apprDone",+d.dataset.done);renderAppr();renderOverview();toast("Marked done.")}if(c){const a=APPR.find(x=>x.id==c.dataset.chase);toast("Sample only. Nothing was sent to "+a.on.split(" (")[0]+".")}});
 
 // ---------- assistant ----------
 function renderPrompts(){$("#prompts").innerHTML=PROMPTS.map((p,i)=>`<button class="prompt" data-p="${i}">${p.t}<small>${p.s}</small></button>`).join("")}
@@ -740,7 +740,9 @@ $("#btnQuoteGen").onclick=()=>{
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px"><div style="border-top:1px solid var(--ink2);padding-top:6px">For ${SEMBA.name}<br><span style="color:var(--ink3)">Name, date</span></div><div style="border-top:1px solid var(--ink2);padding-top:6px">Accepted for ${esc($("#qClient").value||"client")}<br><span style="color:var(--ink3)">Name, designation, company stamp, date</span></div></div>
   </div></div>`;
   $("#btnQuoteCopy").onclick=()=>{const txt=$("#qPaper").innerText;navigator.clipboard?.writeText(txt).then(()=>toast("Quotation copied as text")).catch(()=>toast("Select the quotation and copy"))};
-  $("#btnQuoteIssue").onclick=()=>{const p=pj($("#qProj").value);if(p){p.budget=Math.round(t.total);p.thread.push(["pm",TEAM[p.pm].n,"Now","Quotation "+qNumber()+" issued, "+fmtRM(t.total)+", valid "+$("#qValid").value+" days."]);}QSEQ++;renderQLines();renderOverview();toast("Filed to "+(p?p.name:"project")+" as contract sum. Next number ready.")};
+  $("#btnQuoteIssue").onclick=()=>{const p=pj($("#qProj").value);if(p){const at=new Date().toISOString(),said="Quotation "+qNumber()+" issued, "+fmtRM(t.total)+", valid "+$("#qValid").value+" days.";p.budget=Math.round(t.total);p.thread.push(["pm",TEAM[p.pm].n,"Now",said]);
+    keep("quotes",{no:qNumber(),proj:p.id,at,total:p.budget,by:$("#qBy").value,client:$("#qClient").value,attn:$("#qAttn").value,site:$("#qSite").value,area:$("#qArea").value,valid:$("#qValid").value,weeks:$("#qDur").value,contingency:$("#qCont").value,discount:$("#qDisc").value,serviceTax:$("#qSst").value,deposit:$("#qDep").value,lines:QL.map(r=>({...r}))});
+    keep("posts",{proj:p.id,role:"pm",name:TEAM[p.pm].n,at,text:said})}QSEQ++;renderQLines();renderOverview();toast("Filed to "+(p?p.name:"project")+" as contract sum. Next number ready.")};
   $("#qDoc").scrollIntoView({behavior:"smooth",block:"start"});
 };
 
@@ -765,7 +767,9 @@ $("#cForm").onsubmit=async e=>{e.preventDefault();
       if(r.ok&&j.ok)made=j;else if(r.status===409&&j.nextSeq){CSEQ=Math.max(CSEQ+1,j.nextSeq);cTree();btn.disabled=false;toast(j.error+" The code has moved to the next free one, create again.");return}else fail=j.error||"The server could not create the folders."}
     catch(x){fail="The local server did not answer."}
     btn.disabled=false}
-  P.push({id,name:brand,kind,venue:$("#cVenue").value,client:$("#cPic").value+", "+$("#cCompany").value,phase:0,status:"blue",statusText:"New",pm,sales,qs:"jun",site:"",design:"yuki",open,budget:0,committed:0,claimed:0,vo:0,plan:{Design:[shiftISO("2026-10-12"),shiftISO("2026-11-06")],Submission:[shiftISO("2026-11-09"),shiftISO("2026-12-04")],Construction:[shiftISO("2026-12-14"),shiftISO("2027-02-05")],Snagging:[shiftISO("2027-02-08"),shiftISO("2027-02-12")],Handover:[shiftISO("2027-02-15"),shiftISO("2027-02-19")],DLP:[shiftISO("2027-02-20"),shiftISO("2027-08-19")]},risk:"",milestones:[["Site survey",shiftISO("2026-10-05"),"due"],["Brief signed off",shiftISO("2026-10-09"),"due"]],vos:[],snags:[],thread:[["sales",TEAM[sales].n,"Now","Client created. Code "+cCode()+(made?". Folder set created, brief and site survey next.":". Brief and site survey next.")]]});
+  const hello="Client created. Code "+cCode()+(made?". Folder set created, brief and site survey next.":". Brief and site survey next.");
+  const proj={id,code:cCode(),name:brand,kind,venue:$("#cVenue").value,client:$("#cPic").value+", "+$("#cCompany").value,phase:0,status:"blue",statusText:"New",pm,sales,qs:"jun",site:"",design:"yuki",open,budget:0,committed:0,claimed:0,vo:0,plan:{Design:[shiftISO("2026-10-12"),shiftISO("2026-11-06")],Submission:[shiftISO("2026-11-09"),shiftISO("2026-12-04")],Construction:[shiftISO("2026-12-14"),shiftISO("2027-02-05")],Snagging:[shiftISO("2027-02-08"),shiftISO("2027-02-12")],Handover:[shiftISO("2027-02-15"),shiftISO("2027-02-19")],DLP:[shiftISO("2027-02-20"),shiftISO("2027-08-19")]},risk:"",milestones:[["Site survey",shiftISO("2026-10-05"),"due"],["Brief signed off",shiftISO("2026-10-09"),"due"]],vos:[],snags:[],thread:[["sales",TEAM[sales].n,"Now",hello]]};
+  P.push(proj);keep("projects",{...proj,thread:[]});keep("posts",{proj:id,role:"sales",name:TEAM[sales].n,at:new Date().toISOString(),text:hello});
   const win=`mkdir "Clients\\${root}\\`+FOLDERS.join(`" "Clients\\${root}\\`)+`"`;
   const mac=`mkdir -p "Clients/${root}/"{"`+FOLDERS.join('","')+`"}`;
   $("#cResult").hidden=false;
@@ -780,7 +784,30 @@ $("#cForm").onsubmit=async e=>{e.preventDefault();
 
 // ---------- local server, optional (PRD 7.1) ----------
 function serverUI(){$("#cSubmit").textContent="Create client and folders";$("#cNote").innerHTML=`<b>Where the folders go.</b> This page is running from the local server, so the folders are created on this computer, inside the folder at the top of the tree. Open the page as a file and it gives you the command instead.`;cTree()}
-async function serverCheck(){if(!/^https?:$/.test(location.protocol))return;try{const r=await fetch("/api/health");const j=await r.json();if(r.ok&&j.app==="sitebook"){SERVER=j;CSEQ=Math.max(CSEQ,j.nextSeq||0);serverUI()}}catch(e){}}
+async function serverCheck(){if(!/^https?:$/.test(location.protocol))return;try{const r=await fetch("/api/health");const j=await r.json();if(r.ok&&j.app==="sitebook"){SERVER=j;CSEQ=Math.max(CSEQ,j.nextSeq||0);serverUI();if(j.store)await loadState()}}catch(e){}}
+
+// ---------- saved changes, only with the local server (PRD 7.2) ----------
+// Sample data keeps shifting with the date engine. Only what the user adds is saved, with real dates.
+const noState=()=>({projects:[],posts:[],checkins:[],apprDone:[],snagsFixed:[],quotes:[]});
+let STATE=noState(),REV=0,STORE=false,SAVED=false,SAVEQ=Promise.resolve();
+const dayKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const todayLog=()=>LOG.filter(l=>!l.day||l.day===dayKey(TODAY));
+const stamp=at=>{const d=new Date(at);return(dayKey(d)===dayKey(TODAY)?"Today":d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}))+" "+d.toTimeString().slice(0,5)};
+function keep(k,v){if(!STORE)return;STATE[k].push(v);saveState()}
+function saveMark(ok,msg){SAVED=ok;const m=$("#saveMark");m.hidden=false;m.className="pill "+(ok?"ok":"bad");m.innerHTML="<i></i>"+(ok?"Changes saved on this computer":"Not saved");if(!ok)toast(msg||"Could not save. The local server did not answer.")}
+function saveState(){SAVEQ=SAVEQ.then(async()=>{if(!STORE)return;try{const r=await fetch("/api/state",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({rev:REV,state:STATE})});const j=await r.json();if(r.ok&&j.ok){REV=j.rev;saveMark(true)}else{if(r.status===409)STORE=false;saveMark(false,(j.error||"Could not save.")+(r.status===409?" Reload this page to carry on.":""))}}catch(e){saveMark(false)}});return SAVEQ}
+function applyState(s){
+  STATE=Object.assign(noState(),s);const year=TODAY.getFullYear();
+  STATE.projects.forEach(p=>{if(pj(p.id)||!p.id||!p.name||!p.plan||!TEAM[p.pm]||(p.sales&&!TEAM[p.sales]))return;P.push({...p,milestones:p.milestones||[],vos:p.vos||[],snags:p.snags||[],thread:[]});const m=/^SMB-(\d{4})-(\d+)$/.exec(p.code||"");if(m&&+m[1]===year)CSEQ=Math.max(CSEQ,+m[2]+1)});
+  STATE.posts.forEach(m=>{const p=pj(m.proj);if(p)p.thread.push([m.role,String(m.name||""),stamp(m.at),String(m.text||"")])});
+  const old=[],now=[];STATE.checkins.forEach(c=>{if(!pj(c.proj)||!TEAM[c.who])return;const d=new Date(c.at);(dayKey(d)===dayKey(TODAY)?now:old).push({...c,note:String(c.note||""),photos:+c.photos||0,time:d.toTimeString().slice(0,5),day:dayKey(d)})});LOG=old.concat(LOG,now);
+  STATE.apprDone.forEach(id=>{const a=APPR.find(x=>x.id==id);if(a)a.state="done"});
+  STATE.snagsFixed.forEach(f=>{const p=pj(f.proj),g=p&&p.snags.find(x=>x[0]===f.title);if(g)g[1]="closed"});
+  STATE.quotes.forEach(q=>{const p=pj(q.proj);if(p)p.budget=+q.total||0;const m=/^SMQ-(\d{4})-(\d+)$/.exec(q.no||"");if(m&&+m[1]===year)QSEQ=Math.max(QSEQ,+m[2]+1)});
+  renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();qFillProjects();renderQLines();cTree();
+}
+async function loadState(){try{const r=await fetch("/api/state");const j=await r.json();if(r.ok&&j.ok){REV=j.rev;STORE=true;applyState(j.state);saveMark(true);$("#btnClearSaved").hidden=false}else saveMark(false,j.error)}catch(e){saveMark(false)}}
+$("#btnClearSaved").onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="Click again to clear";b._x=setTimeout(()=>{delete b.dataset.sure;b.textContent="Clear saved changes"},4000);return}clearTimeout(b._x);STATE=noState();saveState().then(()=>{if(SAVED)location.reload()})};
 
 // ---------- boot ----------
 qLoadTemplate();qFillProjects();cTree();
