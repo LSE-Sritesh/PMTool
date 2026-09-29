@@ -75,7 +75,7 @@ Sixteen week Gantt starting the Monday four weeks before today. One row per proj
 Who is where today (two coordinators, their check-ins and planned stops). A check-in form (coordinator, project, note, flag). Saving adds to the log, refreshes Today, and shows a toast. Photos are placeholders in the prototype.
 
 ### 4.5 Approvals
-Queue sorted by days waiting. Filters for open, waiting on SEMBA, waiting on others, done. Chase drafts a toast. Done marks the item and refreshes Today.
+Queue sorted by days waiting. Filters for open, waiting on SEMBA, waiting on others, done. Chase shows a toast that says nothing was sent. Done marks the item and refreshes Today, including the claims overdue tile, which is summed from open progress claims.
 
 ### 4.6 Quotation (added 29 September)
 Standard template for every job. Header (project picker that pre-fills client, attention, site and area, prepared by, validity, construction period, contingency, discount, service tax rate, deposit). Line items table with 14 standard sections and 19 template lines, editable inline, add and remove lines. Live totals. Generate renders the quotation document with SEMBA letterhead (address and phone from the public website), numbered lines grouped by section with section totals, material and labour columns, totals block, six standard terms, and two signature blocks. Copy as text works. Issue and file writes the total into the project's contract sum, posts a line in the project thread and advances the quotation number.
@@ -83,7 +83,7 @@ Standard template for every job. Header (project picker that pre-fills client, a
 Tax logic. Service tax is applied to the labour and services subtotal (plus the labour share of contingency), not to materials. This follows Service Tax Policy 7/2025 which brought construction work services into scope at 6 percent from 1 July 2025, with the material portion outside scope when itemised separately. Sources, Ministry of Finance press release on the 1 July 2025 expansion, and KTP's 28 October 2025 summary of Policy 7/2025. Registration threshold and any exemptions for specific building types were not verified. Get SEMBA's finance or tax agent to confirm the rate and treatment before a real quotation goes out. The rate is a field, not a constant, for this reason.
 
 ### 4.7 New client (added 29 September)
-Form (company, brand, PIC, phone, email, type, area, venue, target opening, source, salesperson, PM). Live preview of the client code and folder tree. Submit creates the project in Brief phase with a default plan, posts the first thread message as the salesperson, shows Windows and Mac commands that create the folder set, and offers Copy. In the browser prototype the folders are not created, the note on the screen says so. See section 7 for the local implementation.
+Form (company, brand, PIC, phone, email, type, area, venue, target opening, source, salesperson, PM). Live preview of the client code and folder tree. Submit creates the project in Brief phase with a default plan, posts the first thread message as the salesperson, shows Windows and Mac commands that create the folder set, and offers Copy. Opened as a file the folders are not created, the note on the screen says so. Run from the local server (section 7.1) the same button creates the folders and the project sheet on disk, and the screen lists what was created in place of the commands.
 
 Standard folder set, one per client, under `Clients/<SMB-YYYY-NNN> <Brand>/`.
 01 Brief and site survey, 02 Design, 03 Quotation and BOQ, 04 Submissions (mall, Bomba, authority), 05 Contract and variations, 06 Site (photos, daily logs), 07 Claims and invoices, 08 Handover and DLP, plus a `<code> <brand> project sheet.md`.
@@ -97,6 +97,7 @@ Colours sampled from SEMBA's public website on 23 September 2026 then brightened
 Navy `#172E58` (rail, headings, construction bars). Bronze `#B29D72` (brand mark, submission bars, sales avatars). Bright blue `#2F80ED` (actions, current phase, today line). Semantic, green `#1E9E5A`, amber `#E39B0A`, red `#D93A3A`. Ground `#F5F6F9`, panels white, line `#E1E4EC`, ink `#172033`.
 Type. EB Garamond 500 and 600 for project names and page titles (SEMBA's own display face). Manrope for everything else. Tabular numerals on every number.
 Dark theme is defined through the same tokens. Keep it working when you add anything.
+Supporting tokens added 29 September so that no component holds a literal colour. `--design` (design bars), `--done` (finished phases, lighter in dark), `--warnink` (amber text), `--sampleink` and `--sampleline` (sample data badge), `--onfill` (text on a filled colour), `--railhover` and `--railon` (rail states).
 Layout. 232px navy rail, content area, single column under 900px. Every list row uses a 4px status stripe. Pills carry status. One shadow, one radius, no gradients.
 
 ## 6. Date engine
@@ -114,6 +115,13 @@ Recommended, Node 20 with Express, serving `index.html` from `localhost:3000`, o
 Alternative, Electron. Pros, one installer, file dialogs, no terminal. Cons, 150MB app for a 700 line page, slower to iterate, harder for a non-developer to patch. Go Node first, wrap in Electron only if SEMBA asks for an installer.
 Alternative, Python with FastAPI. Pros, Sritesh's automation stack is Python. Cons, the front end is already JavaScript and one language keeps the repo simple. Use Python only if the invoice bot codebase is going to be reused.
 Front end change. When `fetch('/api/clients')` succeeds, hide the command block and show the created paths. When it fails (page opened as a file, or from the artifact link), fall back to the current behaviour.
+
+Built 29 September 2026, in `server.js`. What differs from the recommendation above.
+1. No Express. The server uses only what ships with Node, so there is nothing to install. Run `node server.js`, or double click `start.bat` on Windows. Reason, the prototype lives on one laptop and a no install start suits a demo. Revisit if the real build goes ahead.
+2. It listens on this computer only (127.0.0.1) and refuses requests that do not come from its own page. It serves `index.html` and nothing else from the folder.
+3. `GET /api/health` tells the page the server is there, where the clients folder is, and the next free client number read from the folders on disk. So the client code no longer resets on reload when the server is running.
+4. A client code that already has a folder is refused. The page moves to the next free code and asks the user to create again.
+5. Folder names are capped at 60 characters and lose trailing dots and spaces, to stay inside Windows path limits. `safeName()` in the page and in `server.js` are the same rule and must change together, as must `FOLDERS`.
 
 ### 7.2 Persistence
 Everything is in memory. Reloading loses new clients, check-ins, posts and quotations. Store state as JSON on disk through the same server (`data/state.json`), read on boot, written on every change. Pros, zero setup, human readable, easy to back up. Cons, no concurrency, two people editing at once will overwrite each other. Acceptable for a single office pilot. Move to SQLite when a second concurrent user appears.
@@ -144,11 +152,13 @@ Integrations with Google or Microsoft (suite unknown). WhatsApp (Meta business A
 
 ## 9. State of the build on 29 September 2026
 
+Built and working in `server.js`. Local server with folder creation on disk (7.1).
+
 Built and working in `index.html`. Today, Projects with detail, Timeline, Site team with check-in form, Approvals with chase and done, Quotation with template, live totals, generate, copy and issue, New client with code, folder preview, commands and project creation, Assistant with four samples. Live date engine. Dark theme. Phone layout.
 
-Not built. Folder creation on disk (7.1), persistence (7.2), print and PDF (7.3), client view (7.4), photo upload (7.5), live model (7.6).
+Not built. Persistence (7.2), print and PDF (7.3), client view (7.4), photo upload (7.5), live model (7.6).
 
-Known rough edges. Weekday words in sample copy move with the date engine and are not always a Friday. The Gantt shows the current phase's red outline only, not earlier late phases. Quotation number and client code sequences reset on reload. The header form on the quotation screen is 4 columns and drops to 2 under 900px.
+Known rough edges. Weekday words in sample copy move with the date engine and are not always a Friday. The Gantt shows the current phase's red outline only, not earlier late phases. The quotation number resets on reload, and so does the client code when the page is opened without the server. Projects created in the page are still lost on reload even though their folders stay on disk (7.2 fixes this). Marking an approval done does not clear the matching risk line or status on the project. The header form on the quotation screen is 4 columns and drops to 2 under 900px.
 
 Open questions that block work, all still unanswered by SEMBA. Office suite. Whether Tokyo HQ mandates a system. Sales headcount. Where the shared drive lives (local server, NAS, Google Drive, OneDrive), which decides where 7.1 writes.
 

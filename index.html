@@ -329,11 +329,11 @@ tr:last-child td{border-bottom:0}
           <div><label for="cSource">Came through</label><select id="cSource"><option>Referral</option><option>Mall leasing</option><option>Japan HQ</option><option>Website</option><option>Repeat client</option></select></div>
           <div><label for="cSales">Salesperson</label><select id="cSales"><option value="dan">Daniel</option><option value="priya">Priya</option></select></div>
           <div><label for="cPm">Project manager</label><select id="cPm"><option value="aiman">Aiman</option><option value="mei">Mei Ling</option><option value="hafiz">Hafiz</option></select></div>
-          <div class="full" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="reset">Clear</button><button class="btn primary" type="submit">Create client</button></div>
+          <div class="full" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="reset">Clear</button><button class="btn primary" type="submit" id="cSubmit">Create client</button></div>
         </form></div></div>
         <div>
           <div class="panel"><div class="hd"><h3>Standard folder set</h3><button class="btn sm" id="btnCopyTree" hidden>Copy command</button></div><div class="bd"><pre id="cTree" style="margin:0;font:12.5px/1.6 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;color:var(--ink2)"></pre></div></div>
-          <div class="note" style="margin-top:14px" id="cNote"><b>Where the folders go.</b> A browser page cannot create folders, so this prototype shows the structure and gives you the command. The local version that creates them directly is not built yet. Both use the same client code, so files and this dashboard always match.</div>
+          <div class="note" style="margin-top:14px" id="cNote"><b>Where the folders go.</b> A browser page cannot create folders, so opened as a file this prototype shows the structure and gives you the command. Run it from the local server and this screen creates the folders directly. Both use the same client code, so files and this dashboard always match.</div>
           <div id="cResult" hidden style="margin-top:14px"></div>
         </div>
       </div>
@@ -745,34 +745,46 @@ $("#btnQuoteGen").onclick=()=>{
 };
 
 // ---------- new client ----------
-let CSEQ=7;
+let CSEQ=7;let SERVER=null;
 const FOLDERS=["01 Brief and site survey","02 Design","03 Quotation and BOQ","04 Submissions (mall, Bomba, authority)","05 Contract and variations","06 Site (photos, daily logs)","07 Claims and invoices","08 Handover and DLP"];
 function cCode(){return "SMB-"+TODAY.getFullYear()+"-"+String(CSEQ).padStart(3,"0")}
-function safeName(s){return s.replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim()}
+function safeName(s){return s.replace(/[\\/:*?"<>|\x00-\x1f]+/g," ").replace(/\s+/g," ").trim().replace(/[. ]+$/,"").slice(0,60).trim()}
 function cTree(){const brand=safeName($("#cBrand").value||"New client");const root=cCode()+" "+brand;$("#cCode").textContent=cCode();
-  $("#cTree").textContent="Clients/\n└─ "+root+"/\n"+FOLDERS.map((f,i)=>"   "+(i===FOLDERS.length-1?"└─ ":"├─ ")+f+"/").join("\n")+"\n   └─ "+root+" project sheet.md";
+  $("#cTree").textContent=(SERVER?SERVER.clientsRoot:"Clients/")+"\n└─ "+root+"/\n"+FOLDERS.map((f,i)=>"   "+(i===FOLDERS.length-1?"└─ ":"├─ ")+f+"/").join("\n")+"\n   └─ "+root+" project sheet.md";
   return root}
 $("#cForm").addEventListener("input",cTree);$("#cForm").addEventListener("reset",()=>setTimeout(cTree,0));
-$("#cForm").onsubmit=e=>{e.preventDefault();
+$("#cForm").onsubmit=async e=>{e.preventDefault();
   const root=cTree();const brand=$("#cBrand").value.trim();const id="c"+CSEQ;
   const open=$("#cOpen").value||shiftISO("2027-01-29");
   const pm=$("#cPm").value,sales=$("#cSales").value;
   const kind=$("#cType").value+($("#cArea").value?", "+(+$("#cArea").value).toLocaleString("en-MY")+" sq ft":"");
-  P.push({id,name:brand,kind,venue:$("#cVenue").value,client:$("#cPic").value+", "+$("#cCompany").value,phase:0,status:"blue",statusText:"New",pm,sales,qs:"jun",site:"",design:"yuki",open,budget:0,committed:0,claimed:0,vo:0,plan:{Design:[shiftISO("2026-10-12"),shiftISO("2026-11-06")],Submission:[shiftISO("2026-11-09"),shiftISO("2026-12-04")],Construction:[shiftISO("2026-12-14"),shiftISO("2027-02-05")],Snagging:[shiftISO("2027-02-08"),shiftISO("2027-02-12")],Handover:[shiftISO("2027-02-15"),shiftISO("2027-02-19")],DLP:[shiftISO("2027-02-20"),shiftISO("2027-08-19")]},risk:"",milestones:[["Site survey",shiftISO("2026-10-05"),"due"],["Brief signed off",shiftISO("2026-10-09"),"due"]],vos:[],snags:[],thread:[["sales",TEAM[sales].n,"Now","Client created. Code "+cCode()+". Brief and site survey next."]]});
+  // with the local server running the folders are created for real, otherwise the commands are shown
+  let made=null,fail="";
+  if(SERVER){const btn=$("#cSubmit");btn.disabled=true;
+    try{const r=await fetch("/api/clients",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:cCode(),brand,company:$("#cCompany").value,pic:$("#cPic").value,phone:$("#cPhone").value,email:$("#cEmail").value,type:$("#cType").value,area:$("#cArea").value,venue:$("#cVenue").value,open:$("#cOpen").value,source:$("#cSource").value,sales:TEAM[sales].n,pm:TEAM[pm].n})});const j=await r.json();
+      if(r.ok&&j.ok)made=j;else if(r.status===409&&j.nextSeq){CSEQ=Math.max(CSEQ+1,j.nextSeq);cTree();btn.disabled=false;toast(j.error+" The code has moved to the next free one, create again.");return}else fail=j.error||"The server could not create the folders."}
+    catch(x){fail="The local server did not answer."}
+    btn.disabled=false}
+  P.push({id,name:brand,kind,venue:$("#cVenue").value,client:$("#cPic").value+", "+$("#cCompany").value,phase:0,status:"blue",statusText:"New",pm,sales,qs:"jun",site:"",design:"yuki",open,budget:0,committed:0,claimed:0,vo:0,plan:{Design:[shiftISO("2026-10-12"),shiftISO("2026-11-06")],Submission:[shiftISO("2026-11-09"),shiftISO("2026-12-04")],Construction:[shiftISO("2026-12-14"),shiftISO("2027-02-05")],Snagging:[shiftISO("2027-02-08"),shiftISO("2027-02-12")],Handover:[shiftISO("2027-02-15"),shiftISO("2027-02-19")],DLP:[shiftISO("2027-02-20"),shiftISO("2027-08-19")]},risk:"",milestones:[["Site survey",shiftISO("2026-10-05"),"due"],["Brief signed off",shiftISO("2026-10-09"),"due"]],vos:[],snags:[],thread:[["sales",TEAM[sales].n,"Now","Client created. Code "+cCode()+(made?". Folder set created, brief and site survey next.":". Brief and site survey next.")]]});
   const win=`mkdir "Clients\\${root}\\`+FOLDERS.join(`" "Clients\\${root}\\`)+`"`;
   const mac=`mkdir -p "Clients/${root}/"{"`+FOLDERS.join('","')+`"}`;
   $("#cResult").hidden=false;
   $("#cResult").innerHTML=`<div class="panel"><div class="hd"><h3>Created ${cCode()}</h3><button class="btn sm primary" data-open="${id}">Open project</button></div><div class="bd">
-    <p style="margin:0 0 10px">${esc(brand)} is now a project in Brief phase, owned by ${TEAM[pm].n} with ${TEAM[sales].n} on sales. The folder set below is ready to create on the shared drive.</p>
+    <p style="margin:0 0 10px">${esc(brand)} is now a project in Brief phase, owned by ${TEAM[pm].n} with ${TEAM[sales].n} on sales. ${made?`The folder set was created on this computer.</p>
+    <div class="eyebrow" style="margin-bottom:4px">Created</div><pre style="margin:0;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cMade">${esc([made.folder].concat(made.created.slice(1).concat(made.sheet).map(p=>"   "+p.slice(made.folder.length+1))).join("\n"))}</pre>`:`${fail?"The folders were not created. "+esc(fail)+" Use the command below instead.":"The folder set below is ready to create on the shared drive."}</p>
     <div class="eyebrow" style="margin-bottom:4px">Windows</div><pre style="margin:0 0 10px;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cWin">${esc(win)}</pre>
-    <div class="eyebrow" style="margin-bottom:4px">Mac</div><pre style="margin:0;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cMac">${esc(mac)}</pre></div></div>`;
-  $("#btnCopyTree").hidden=false;$("#btnCopyTree").onclick=()=>{navigator.clipboard?.writeText(win+"\n"+mac).then(()=>toast("Commands copied")).catch(()=>toast("Select and copy the commands"))};
-  CSEQ++;renderOverview();renderCards("#projCards","all");renderGantt();qFillProjects();$("#cForm").reset();setTimeout(cTree,0);toast("Client created and added to projects");
+    <div class="eyebrow" style="margin-bottom:4px">Mac</div><pre style="margin:0;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cMac">${esc(mac)}</pre>`}</div></div>`;
+  $("#btnCopyTree").hidden=!!made;$("#btnCopyTree").onclick=()=>{navigator.clipboard?.writeText(win+"\n"+mac).then(()=>toast("Commands copied")).catch(()=>toast("Select and copy the commands"))};
+  CSEQ++;renderOverview();renderCards("#projCards","all");renderGantt();qFillProjects();$("#cForm").reset();setTimeout(cTree,0);toast(made?"Client and folders created":"Client created and added to projects");
 };
+
+// ---------- local server, optional (PRD 7.1) ----------
+function serverUI(){$("#cSubmit").textContent="Create client and folders";$("#cNote").innerHTML=`<b>Where the folders go.</b> This page is running from the local server, so the folders are created on this computer, inside the folder at the top of the tree. Open the page as a file and it gives you the command instead.`;cTree()}
+async function serverCheck(){if(!/^https?:$/.test(location.protocol))return;try{const r=await fetch("/api/health");const j=await r.json();if(r.ok&&j.app==="sitebook"){SERVER=j;CSEQ=Math.max(CSEQ,j.nextSeq||0);serverUI()}}catch(e){}}
 
 // ---------- boot ----------
 qLoadTemplate();qFillProjects();cTree();
-renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();renderPrompts();
+renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();renderPrompts();serverCheck();
 if(location.hash){const h=location.hash.slice(1);if(["overview","projects","timeline","site","approvals","quote","client","assistant"].includes(h))go(h)}
 </script>
 </body></html>

@@ -6,12 +6,12 @@ Read `PRD.md` first. It holds the domain model, every screen, the design tokens,
 A single-file project management prototype for SEMBA Malaysia, a fit-out firm in KL. `index.html` is the whole app, no build step, no dependencies beyond two Google Fonts. Open it in a browser and it runs on sample data. It was published as a Claude artifact for a client demo, and is now being turned into a local app.
 
 ## Start here
-1. `open index.html` (or serve it, `npx serve .`) and click through all eight tabs so you know what exists.
-2. Next job is PRD section 7.1, a Node server that creates client folders on disk. Then 7.2, persistence.
+1. Run `node server.js` and open `http://localhost:3000` (or open `index.html` as a file) and click through all eight tabs so you know what exists.
+2. PRD 7.1 is built. `server.js` creates client folders on disk, with no dependencies. Next job is 7.2, persistence.
 3. Keep `index.html` working as a standalone file. The server adds capability, it must not become a requirement.
 
 ## Layout of index.html
-Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme blocks, components). Markup, one `<section class="view">` per tab. `<script>` with data (`PHASES`, `TEAM`, `P` projects, `APPR`, `LOG`, `PROMPTS`, `QTEMPLATE`, `FOLDERS`), helpers, then one render function per screen, then the date engine, then boot at the bottom.
+Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme blocks, components). Markup, one `<section class="view">` per tab. `<script>` with data (`PHASES`, `TEAM`, `P` projects, `APPR`, `LOG`, `PROMPTS`, `QTEMPLATE`, `FOLDERS`), helpers, then one render function per screen, then the date engine, then boot at the bottom. The boot line ends with `serverCheck()`, which looks for the local server and switches the New client screen to real folder creation when it finds it.
 
 ## Rules
 1. Copy has no dashes and no colons in running text. Use commas, full stops, parentheses, numbered lists.
@@ -22,6 +22,9 @@ Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme bl
 6. The date engine shifts all sample dates to today. Remove it only when real data replaces the sample, and keep `TODAY`.
 7. Service tax on quotations is applied to labour only, per Service Tax Policy 7/2025. Rate stays a field. SEMBA's finance confirms before a real quote goes out.
 8. The owner edits files between sessions. Re-read before editing, change in place, never restore something he removed. Flag it instead.
+9. `FOLDERS` and `safeName()` exist in both `index.html` and `server.js`. Change both together.
+10. Anything from data or a form goes through `esc()` before it reaches `innerHTML`.
+11. `Clients/` and `data/` are ignored by git because they can hold real client details. Keep it that way.
 
 ## Owner
 Sritesh Naidu, AI Lead, Lemon Sky Edge. He is the trainer selling SEMBA an AI course, this tool is the demo and the seed of a solutions engagement. When in doubt about scope, the question is "does this help him show capability without promising what Lemon Sky has not agreed to build".
