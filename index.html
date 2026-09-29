@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SEMBA Sitebook</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
@@ -7,7 +7,8 @@
   --blue:#2F80ED; --blue2:#1E63C4; --bluewash:#EAF2FE;
   --ok:#1E9E5A; --okwash:#E6F6EC; --warn:#E39B0A; --warnwash:#FFF4DC; --bad:#D93A3A; --badwash:#FDE8E8;
   --bg:#F5F6F9; --panel:#FFFFFF; --line:#E1E4EC; --ink:#172033; --ink2:#5B6577; --ink3:#8A93A5;
-  --rail:#172E58; --railtext:#C9D3E8;
+  --rail:#172E58; --railtext:#C9D3E8; --railhover:rgba(255,255,255,.07); --railon:rgba(255,255,255,.12); --onfill:#FFFFFF;
+  --design:#5A78B8; --done:#172E58; --warnink:#9A6600; --sampleink:#6E4A00; --sampleline:#F1D48A;
   --radius:10px; --shadow:0 1px 2px rgba(23,32,51,.06),0 4px 14px rgba(23,32,51,.05);
   --font:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --serif:"EB Garamond",Georgia,"Times New Roman",serif;
   color-scheme:light;
@@ -15,10 +16,12 @@
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#0F1522; --panel:#171F2F; --line:#2A3446; --ink:#EEF1F7; --ink2:#AAB3C5; --ink3:#7C8699;
   --bluewash:#1A2A44; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0B1327; --railtext:#A9B6D0;
+  --done:#5A78B8; --warnink:#F0BE55; --sampleink:#F5D486; --sampleline:#6E5518;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3); color-scheme:dark; }}
 :root[data-theme="dark"]{
   --bg:#0F1522; --panel:#171F2F; --line:#2A3446; --ink:#EEF1F7; --ink2:#AAB3C5; --ink3:#7C8699;
   --bluewash:#1A2A44; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0B1327; --railtext:#A9B6D0;
+  --done:#5A78B8; --warnink:#F0BE55; --sampleink:#F5D486; --sampleline:#6E5518;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3); color-scheme:dark; }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -28,19 +31,19 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .app{display:grid;grid-template-columns:232px 1fr;min-height:100%}
 /* rail */
 .rail{background:var(--rail);color:var(--railtext);padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:env(safe-area-inset-top,0px);height:100vh}
-.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;color:#fff}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;color:var(--onfill)}
 .brand .mark{width:34px;height:34px;border-radius:8px;background:var(--bronze);display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:20px;color:var(--navy2)}
 .brand b{font-size:16px;letter-spacing:.04em}
 .brand small{display:block;font-size:11px;color:var(--railtext);letter-spacing:.12em;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 10px;color:var(--railtext);cursor:pointer;font-weight:600}
 .nav button svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.nav button:hover{background:rgba(255,255,255,.07);color:#fff}
-.nav button.on{background:rgba(255,255,255,.12);color:#fff}
+.nav button:hover{background:var(--railhover);color:var(--onfill)}
+.nav button.on{background:var(--railon);color:var(--onfill)}
 .nav button .n{margin-left:auto;background:var(--bronze);color:var(--navy2);font-size:11px;font-weight:800;padding:1px 7px;border-radius:99px}
 .nav button:focus-visible,.btn:focus-visible,.tab:focus-visible,.chip:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-.railfoot{margin-top:auto;font-size:11.5px;color:var(--railtext);line-height:1.5;padding:10px 8px;border-top:1px solid rgba(255,255,255,.12)}
-.railfoot b{color:#fff}
+.railfoot{margin-top:auto;font-size:11.5px;color:var(--railtext);line-height:1.5;padding:10px 8px;border-top:1px solid var(--railon)}
+.railfoot b{color:var(--onfill)}
 /* main */
 .main{padding:22px 28px 40px;min-width:0}
 .topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
@@ -48,9 +51,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .title{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.1;color:var(--ink)}
 .title em{font-style:normal;color:var(--bronze2)}
 .sub{color:var(--ink2);margin-top:4px;max-width:62ch}
-.sample{display:inline-flex;align-items:center;gap:8px;background:var(--warnwash);color:#6E4A00;border:1px solid #F1D48A;border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700}
-:root[data-theme="dark"] .sample{color:#F5D486}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sample{color:#F5D486;border-color:#6E5518}}
+.sample{display:inline-flex;align-items:center;gap:8px;background:var(--warnwash);color:var(--sampleink);border:1px solid var(--sampleline);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700}
 .view{display:none}.view.on{display:block}
 .grid{display:grid;gap:14px}
 .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -73,9 +74,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .stripe.bad{background:var(--bad)}.stripe.warn{background:var(--warn)}.stripe.ok{background:var(--ok)}.stripe.blue{background:var(--blue)}
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
 .pill i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
-.pill.ok{background:var(--okwash);color:var(--ok)}.pill.warn{background:var(--warnwash);color:#9A6600}.pill.bad{background:var(--badwash);color:var(--bad)}.pill.blue{background:var(--bluewash);color:var(--blue2)}.pill.grey{background:var(--bg);color:var(--ink2);border:1px solid var(--line)}
-:root[data-theme="dark"] .pill.warn{color:#F0BE55}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pill.warn{color:#F0BE55}}
+.pill.ok{background:var(--okwash);color:var(--ok)}.pill.warn{background:var(--warnwash);color:var(--warnink)}.pill.bad{background:var(--badwash);color:var(--bad)}.pill.blue{background:var(--bluewash);color:var(--blue2)}.pill.grey{background:var(--bg);color:var(--ink2);border:1px solid var(--line)}
 /* project cards */
 .cards{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s,border-color .12s;display:flex;flex-direction:column;gap:10px}
@@ -85,19 +84,17 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .card .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .phases{display:flex;gap:3px}
 .phases span{flex:1;height:6px;border-radius:3px;background:var(--line)}
-.phases span.done{background:var(--navy)}.phases span.now{background:var(--blue)}
-:root[data-theme="dark"] .phases span.done{background:#5A78B8}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .phases span.done{background:#5A78B8}}
+.phases span.done{background:var(--done)}.phases span.now{background:var(--blue)}
 .card .foot{display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
 .card .foot b{color:var(--ink)}
 .avs{display:flex}
-.av{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-size:10.5px;font-weight:800;display:grid;place-items:center;border:2px solid var(--panel);margin-left:-6px}
+.av{width:26px;height:26px;border-radius:50%;background:var(--navy);color:var(--onfill);font-size:10.5px;font-weight:800;display:grid;place-items:center;border:2px solid var(--panel);margin-left:-6px}
 .av:first-child{margin-left:0}.av.b{background:var(--bronze);color:var(--navy2)}.av.g{background:var(--ink3)}.av.bl{background:var(--blue)}
 /* buttons, tabs, chips */
 .btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
 .btn:hover{border-color:var(--blue);color:var(--blue2)}
-.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-.btn.primary:hover{background:var(--blue2);color:#fff}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:var(--onfill)}
+.btn.primary:hover{background:var(--blue2);color:var(--onfill)}
 .btn.sm{padding:4px 9px;font-size:12px}
 .btn.ghost{background:none}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 16px;overflow-x:auto}
@@ -112,10 +109,8 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .stepper{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:16px}
 .step{padding:8px 6px 8px;border-top:4px solid var(--line);font-size:11px;font-weight:700;color:var(--ink3);line-height:1.2}
 .step small{display:block;font-weight:500;font-size:10.5px;margin-top:2px}
-.step.done{border-top-color:var(--navy);color:var(--ink2)}
+.step.done{border-top-color:var(--done);color:var(--ink2)}
 .step.now{border-top-color:var(--blue);color:var(--blue2)}
-:root[data-theme="dark"] .step.done{border-top-color:#5A78B8}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .step.done{border-top-color:#5A78B8}}
 .three{grid-template-columns:repeat(3,1fr)}
 .kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:13px}
 .kv dt{color:var(--ink2)}.kv dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
@@ -150,8 +145,8 @@ tr:last-child td{border-bottom:0}
 .gg .cell{border-bottom:1px solid var(--line);border-left:1px solid var(--line);position:relative;min-height:46px}
 .gg .cell.today{background:linear-gradient(90deg,transparent 48%,var(--blue) 48%,var(--blue) 52%,transparent 52%)}
 .gg .cell.month{border-left:2px solid var(--ink3)}
-.gbar{position:absolute;top:12px;height:22px;border-radius:5px;font-size:11px;font-weight:700;color:#fff;padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
-.gbar.design{background:#5A78B8}.gbar.submit{background:var(--bronze);color:var(--navy2)}.gbar.build{background:var(--navy)}.gbar.snag{background:var(--blue)}.gbar.hand{background:var(--ok)}.gbar.dlp{background:var(--line);color:var(--ink2)}
+.gbar{position:absolute;top:12px;height:22px;border-radius:5px;font-size:11px;font-weight:700;color:var(--onfill);padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
+.gbar.design{background:var(--design)}.gbar.submit{background:var(--bronze);color:var(--navy2)}.gbar.build{background:var(--navy)}.gbar.snag{background:var(--blue)}.gbar.hand{background:var(--ok)}.gbar.dlp{background:var(--line);color:var(--ink2)}
 .gbar.late{box-shadow:inset 0 0 0 2px var(--bad)}
 /* site */
 .who{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
@@ -181,7 +176,7 @@ tr:last-child td{border-bottom:0}
 .out .src{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12px;color:var(--ink3)}
 .note{background:var(--bluewash);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--ink);border:1px solid transparent}
 .note b{color:var(--blue2)}
-.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:99px;font-weight:700;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--navy);color:var(--onfill);padding:10px 16px;border-radius:99px;font-weight:700;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
 .toast.on{opacity:1}
 .menubtn{display:none}
 .q4{grid-template-columns:repeat(4,1fr)}
@@ -202,6 +197,7 @@ tr:last-child td{border-bottom:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+</head><body>
 
 <div class="app">
   <aside class="rail">
@@ -253,7 +249,7 @@ tr:last-child td{border-bottom:0}
     <section class="view" id="v-timeline">
       <div class="topbar">
         <div><div class="eyebrow" id="ganttRange"></div><h1 class="title">Timeline</h1><div class="sub">Every project by phase. The blue line is today. A red outline means the phase has already run past its planned end.</div></div>
-        <div class="legend"><span><i style="background:#5A78B8"></i>Design</span><span><i style="background:var(--bronze)"></i>Mall and Bomba submission</span><span><i style="background:var(--navy)"></i>Construction</span><span><i style="background:var(--blue)"></i>VM and snagging</span><span><i style="background:var(--ok)"></i>Handover</span><span><i style="background:var(--line)"></i>DLP</span></div>
+        <div class="legend"><span><i style="background:var(--design)"></i>Design</span><span><i style="background:var(--bronze)"></i>Mall and Bomba submission</span><span><i style="background:var(--navy)"></i>Construction</span><span><i style="background:var(--blue)"></i>VM and snagging</span><span><i style="background:var(--ok)"></i>Handover</span><span><i style="background:var(--line)"></i>DLP</span></div>
       </div>
       <div class="panel gantt"><div class="gg" id="gantt"></div></div>
     </section>
@@ -261,7 +257,7 @@ tr:last-child td{border-bottom:0}
     <!-- SITE -->
     <section class="view" id="v-site">
       <div class="topbar">
-        <div><div class="eyebrow" data-today-long></div><h1 class="title">Site team</h1><div class="sub">Where the site coordinators are, what they saw, and what they flagged. Check-ins come from the phone, with photos, so the PM does not have to chase.</div></div>
+        <div><div class="eyebrow" data-today-long></div><h1 class="title">Site team</h1><div class="sub">Where the site coordinators are, what they saw, and what they flagged. Check-ins are logged from the phone, so the PM does not have to chase. Photo upload is not built yet.</div></div>
         <button class="btn primary" id="btnCheckin">+ Log a site check-in</button>
       </div>
       <div class="grid who" id="whoWhere"></div>
@@ -317,7 +313,7 @@ tr:last-child td{border-bottom:0}
     <!-- NEW CLIENT -->
     <section class="view" id="v-client">
       <div class="topbar">
-        <div><div class="eyebrow">Onboarding</div><h1 class="title">New client</h1><div class="sub">Enter the client once. The tool creates the project, the client code and the standard folder set, so every job starts with the same structure.</div></div>
+        <div><div class="eyebrow">Onboarding</div><h1 class="title">New client</h1><div class="sub">Enter the client once. The tool creates the project and the client code, and lays out the standard folder set, so every job starts with the same structure.</div></div>
       </div>
       <div class="grid two">
         <div class="panel"><div class="hd"><h3>Client and site</h3><span class="pill grey" id="cCode"></span></div><div class="bd"><form class="field" id="cForm">
@@ -333,11 +329,11 @@ tr:last-child td{border-bottom:0}
           <div><label for="cSource">Came through</label><select id="cSource"><option>Referral</option><option>Mall leasing</option><option>Japan HQ</option><option>Website</option><option>Repeat client</option></select></div>
           <div><label for="cSales">Salesperson</label><select id="cSales"><option value="dan">Daniel</option><option value="priya">Priya</option></select></div>
           <div><label for="cPm">Project manager</label><select id="cPm"><option value="aiman">Aiman</option><option value="mei">Mei Ling</option><option value="hafiz">Hafiz</option></select></div>
-          <div class="full" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="reset">Clear</button><button class="btn primary" type="submit">Create client and folders</button></div>
+          <div class="full" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="reset">Clear</button><button class="btn primary" type="submit">Create client</button></div>
         </form></div></div>
         <div>
-          <div class="panel"><div class="hd"><h3>Folder set that will be created</h3><button class="btn sm" id="btnCopyTree" hidden>Copy command</button></div><div class="bd"><pre id="cTree" style="margin:0;font:12.5px/1.6 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;color:var(--ink2)"></pre></div></div>
-          <div class="note" style="margin-top:14px" id="cNote"><b>Where the folders go.</b> In the browser preview the tool shows the structure and gives you the command. The desktop version creates the folders on the shared drive directly. Both use the same client code, so files and this dashboard always match.</div>
+          <div class="panel"><div class="hd"><h3>Standard folder set</h3><button class="btn sm" id="btnCopyTree" hidden>Copy command</button></div><div class="bd"><pre id="cTree" style="margin:0;font:12.5px/1.6 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;color:var(--ink2)"></pre></div></div>
+          <div class="note" style="margin-top:14px" id="cNote"><b>Where the folders go.</b> A browser page cannot create folders, so this prototype shows the structure and gives you the command. The local version that creates them directly is not built yet. Both use the same client code, so files and this dashboard always match.</div>
           <div id="cResult" hidden style="margin-top:14px"></div>
         </div>
       </div>
@@ -372,7 +368,7 @@ const P=[
   plan:{Design:["2026-07-06","2026-07-31"],Submission:["2026-08-03","2026-08-28"],Construction:["2026-08-24","2026-10-16"],Snagging:["2026-10-19","2026-10-26"],Handover:["2026-10-27","2026-10-30"],DLP:["2026-10-31","2027-04-30"]},
   risk:"Bomba resubmission for sprinkler relocation. Ceiling closing is held until it clears.",
   milestones:[["Client design sign-off","2026-07-29","done"],["Mall drawing approval","2026-08-21","done"],["Bomba approval","2026-08-28","late"],["Ceiling close","2026-09-25","risk"],["Kitchen equipment delivery","2026-10-06","due"],["Practical completion","2026-10-16","due"],["Soft opening","2026-10-30","due"]],
-  vos:[["VO-03","Relocate 2 sprinkler heads per Bomba comment",6200,"Client approved"],["VO-04","Upgrade counter stone to quartz","12300","Awaiting client"]],
+  vos:[["VO-03","Relocate 2 sprinkler heads per Bomba comment",6200,"Client approved"],["VO-04","Upgrade counter stone to quartz",12300,"Awaiting client"]],
   snags:[["Chipped tile at entrance threshold","open"],["Pendant light off centre by 40mm","open"],["Touch up paint, column C2","closed"]],
   thread:[["client","Ms Lim","Mon 09:40","Can we still open on {d:37}? Marketing has already booked the launch."],["pm","Aiman","Mon 10:15","Yes if Bomba clears by Friday. Ceiling is the only item waiting. I will confirm {w:3} 5pm either way."],["sales","Daniel","Mon 10:20","Ms Lim, VO-04 for the quartz counter is with you. It needs a yes by {w:0} to keep the stone delivery slot."],["client","Ms Lim","Tue 16:02","Quartz approved. Send the revised invoice."]]},
  {id:"hana",name:"Hana Bakery",kind:"Bakery café, 1,900 sq ft",venue:"1 Utama, New Wing LG",client:"Mr Tan, Hana F&B Sdn Bhd",phase:5,status:"ok",statusText:"On track",pm:"mei",sales:"priya",qs:"jun",site:"kumar",design:"yuki",
@@ -418,7 +414,7 @@ const pj=id=>P.find(p=>p.id===id);
 
 let APPR=[
  {id:1,item:"Design sign-off, revised kitchen layout",proj:"tsubaki",type:"Client sign-off",on:"Mr Sato (client)",side:"theirs",days:5,impact:"Mall submission slips day for day. January opening at risk.",state:"open"},
- {id:2,item:"Progress claim 3, RM 312,000",proj:"aoi",type:"Progress claim",on:"Aoi finance (Tokyo)",side:"theirs",days:21,impact:"Carpentry material order on hold. Partition date slips.",state:"open"},
+ {id:2,item:"Progress claim 3, RM 312,000",proj:"aoi",type:"Progress claim",amount:312000,on:"Aoi finance (Tokyo)",side:"theirs",days:21,impact:"Carpentry material order on hold. Partition date slips.",state:"open"},
  {id:3,item:"Bomba resubmission, sprinkler relocation",proj:"kissa",type:"Bomba",on:"Bomba KL",side:"theirs",days:9,impact:"Ceiling cannot close. Two days lost per day waiting.",state:"open"},
  {id:4,item:"VO-04, quartz counter, RM 12,300",proj:"kissa",type:"Variation order",on:"Syafiq (QS) to issue revised invoice",side:"ours",days:1,impact:"Stone delivery slot held until {w:3}.",state:"open"},
  {id:5,item:"Shopfront section drawing at 1 to 20",proj:"kobe",type:"Mall drawing",on:"Yuki (design) to resubmit",side:"ours",days:2,impact:"Mall approval date {d:2} at risk.",state:"open"},
@@ -505,6 +501,7 @@ const fmtD=s=>{const d=new Date(s);return d.toLocaleDateString("en-GB",{day:"num
 const daysBetween=(a,b)=>Math.round((new Date(b)-new Date(a))/86400000);
 const pillFor=st=>({ok:"ok",warn:"warn",bad:"bad",grey:"grey",blue:"blue"}[st]||"grey");
 const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove("on"),2200)}
 function avatar(k){if(!k)return"";return `<span class="av ${TEAM[k].c}" title="${TEAM[k].n}, ${TEAM[k].r}">${ini(k)}</span>`}
 
@@ -519,7 +516,7 @@ function cardHTML(p){
   const dl=daysBetween(TODAY,p.open);
   return `<div class="card" data-open="${p.id}" tabindex="0" role="button">
     <div class="meta"><span class="pill ${pillFor(p.status)}"><i></i>${p.statusText}</span><span class="pill grey">${PHASES[p.phase]}</span></div>
-    <div><div class="name">${p.name}</div><div class="where">${p.kind} · ${p.venue}</div></div>
+    <div><div class="name">${esc(p.name)}</div><div class="where">${esc(p.kind)} · ${esc(p.venue)}</div></div>
     <div class="phases">${ph}</div>
     <div class="foot"><span>${dl>=0?"Opens in <b>"+dl+" days</b>":"Opened <b>"+(-dl)+" days ago</b>"} · ${fmtD(p.open)}</span><span class="avs">${avatar(p.pm)}${avatar(p.sales)}${avatar(p.site)}</span></div>
   </div>`;
@@ -536,9 +533,11 @@ $("#projFilter").addEventListener("click",e=>{const b=e.target.closest(".chip");
 function renderOverview(){
   const live=P.filter(p=>p.phase<7).length, risk=P.filter(p=>p.status==="bad"||p.status==="warn").length;
   const openAppr=APPR.filter(a=>a.state==="open"), ours=openAppr.filter(a=>a.side==="ours").length;
-  const claims=312000, sites=LOG.length;
+  const due=openAppr.filter(a=>a.type==="Progress claim"&&a.days>0), claims=due.reduce((s,a)=>s+(a.amount||0),0);
+  const dueText=!due.length?"None overdue":due.length===1?pj(due[0].proj).name.split(" ")[0]+", "+due[0].item.split(",")[0].replace(/^Progress /,"")+", "+due[0].days+" days":due.length+" claims, oldest "+Math.max(...due.map(a=>a.days))+" days";
+  const pl=(n,w)=>n+" "+w+(n===1?"":"s"), coords=new Set(LOG.map(l=>l.who)).size, sites=new Set(LOG.map(l=>l.proj)).size;
   $("#kpis").innerHTML=[
-    ["Live projects",live,"of "+P.length+" in portfolio","blue"],["At risk",risk,"need a decision this week",risk?"bad":"ok"],["Approvals waiting",openAppr.length,ours+" waiting on SEMBA",""],["Claims overdue",fmtRM(claims).replace("RM ","RM&nbsp;"),"Aoi, claim 3, 21 days","warn"],["Site check-ins today",sites,"2 coordinators, 4 sites","ok"]
+    ["Live projects",live,"of "+P.length+" in portfolio","blue"],["At risk",risk,"need a decision this week",risk?"bad":"ok"],["Approvals waiting",openAppr.length,ours+" waiting on SEMBA",""],["Claims overdue",fmtRM(claims).replace("RM ","RM&nbsp;"),esc(dueText),due.length?"warn":"ok"],["Site check-ins today",LOG.length,pl(coords,"coordinator")+", "+pl(sites,"site"),"ok"]
   ].map(([l,v,d,c])=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
   $("#nProj").textContent=live;$("#nAppr").textContent=openAppr.length;
   const att=[];
@@ -546,8 +545,8 @@ function renderOverview(){
   LOG.filter(l=>l.flag).forEach(l=>att.push({s:l.flag,t:pj(l.proj).name+", site flag from "+TEAM[l.who].n,m:l.flagText,r:l.time,id:l.proj}));
   att.sort((a,b)=>(a.s==="bad"?0:1)-(b.s==="bad"?0:1));
   $("#attnCount").textContent=att.length+" items";
-  $("#attention").innerHTML=att.map(a=>`<div class="row" data-open="${a.id}" style="cursor:pointer"><span class="stripe ${a.s}"></span><div><div class="t">${a.t}</div><div class="m">${a.m}</div></div><div class="r">${a.r}</div></div>`).join("");
-  $("#siteNow").innerHTML=LOG.slice().reverse().map(l=>`<div class="row"><span class="av ${TEAM[l.who].c}" style="margin:0">${ini(l.who)}</span><div><div class="t">${TEAM[l.who].n} at ${pj(l.proj).name}</div><div class="m">${l.note.slice(0,90)}${l.note.length>90?"…":""}</div></div><div class="r">${l.time}<br>${l.photos} photos</div></div>`).join("");
+  $("#attention").innerHTML=att.map(a=>`<div class="row" data-open="${a.id}" style="cursor:pointer"><span class="stripe ${a.s}"></span><div><div class="t">${esc(a.t)}</div><div class="m">${esc(a.m)}</div></div><div class="r">${a.r}</div></div>`).join("");
+  $("#siteNow").innerHTML=LOG.slice().reverse().map(l=>`<div class="row"><span class="av ${TEAM[l.who].c}" style="margin:0">${ini(l.who)}</span><div><div class="t">${TEAM[l.who].n} at ${esc(pj(l.proj).name)}</div><div class="m">${esc(l.note.slice(0,90))}${l.note.length>90?"…":""}</div></div><div class="r">${l.time}<br>${l.photos} photos</div></div>`).join("");
   renderCards("#ovCards","all");
 }
 
@@ -560,25 +559,25 @@ function openProject(id){
   d.innerHTML=`
     <button class="btn sm ghost" data-go="projects" style="margin-bottom:12px">&larr; All projects</button>
     <div class="dethead">
-      <div><div class="eyebrow">${p.kind}</div><div class="name">${p.name}</div><div class="sub">${p.venue} · ${p.client}</div></div>
+      <div><div class="eyebrow">${esc(p.kind)}</div><div class="name">${esc(p.name)}</div><div class="sub">${esc(p.venue)} · ${esc(p.client)}</div></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill ${pillFor(p.status)}"><i></i>${p.statusText}</span><span class="pill grey">Opens ${fmtD(p.open)}</span><button class="btn sm" id="btnShare">Share client view</button></div>
     </div>
     <div class="stepper">${steps}</div>
-    ${p.risk?`<div class="note" style="margin-top:14px;background:var(--${p.status==="bad"?"badwash":"warnwash"})"><b style="color:inherit">Watch.</b> ${p.risk}</div>`:""}
+    ${p.risk?`<div class="note" style="margin-top:14px;background:var(--${p.status==="bad"?"badwash":"warnwash"})"><b style="color:inherit">Watch.</b> ${esc(p.risk)}</div>`:""}
     <div class="grid three" style="margin-top:14px">
-      <div class="panel"><div class="hd"><h3>Milestones</h3></div><div class="bd list">${p.milestones.map(([t,dt,s])=>`<div class="row" style="padding:8px 0"><span class="stripe ${s==="done"?"ok":s==="late"?"bad":s==="risk"?"warn":""}"></span><div class="t" style="font-weight:600">${t}</div><div class="r">${fmtD(dt)}<br><span class="pill ${s==="done"?"ok":s==="late"?"bad":s==="risk"?"warn":"grey"}" style="margin-top:2px">${s==="done"?"Done":s==="late"?daysBetween(dt,TODAY)+" days late":s==="risk"?"At risk":"Due"}</span></div></div>`).join("")}</div></div>
+      <div class="panel"><div class="hd"><h3>Milestones</h3></div><div class="bd list">${p.milestones.map(([t,dt,s])=>`<div class="row" style="padding:8px 0"><span class="stripe ${s==="done"?"ok":s==="late"?"bad":s==="risk"?"warn":""}"></span><div class="t" style="font-weight:600">${esc(t)}</div><div class="r">${fmtD(dt)}<br><span class="pill ${s==="done"?"ok":s==="late"?"bad":s==="risk"?"warn":"grey"}" style="margin-top:2px">${s==="done"?"Done":s==="late"?daysBetween(dt,TODAY)+" days late":s==="risk"?"At risk":"Due"}</span></div></div>`).join("")}</div></div>
       <div class="panel"><div class="hd"><h3>Money</h3><span class="pill grey">${p.qs?TEAM[p.qs].n+", QS":""}</span></div><div class="bd">
         <dl class="kv"><dt>Contract sum</dt><dd>${fmtRM(p.budget)}</dd><dt>Committed to subcontractors</dt><dd>${fmtRM(p.committed)}</dd><dt>Claimed to date</dt><dd>${fmtRM(p.claimed)}</dd><dt>Approved variations</dt><dd>${fmtRM(p.vo)}</dd><dt>Uncommitted</dt><dd style="color:${rem<0?"var(--bad)":"inherit"}">${fmtRM(rem)}</dd></dl>
         <div class="bar"><span style="width:${pc(p.claimed)}%;background:var(--ok)"></span><span style="width:${pc(p.committed-p.claimed)}%;background:var(--navy)"></span></div>
         <div class="legend"><span><i style="background:var(--ok)"></i>Claimed</span><span><i style="background:var(--navy)"></i>Committed, not yet claimed</span><span><i style="background:var(--line)"></i>Uncommitted</span></div>
       </div></div>
-      <div class="panel"><div class="hd"><h3>Team</h3></div><div class="bd list">${["pm","sales","qs","design","site"].filter(k=>p[k]).map(k=>`<div class="row" style="padding:7px 0;align-items:center">${avatar(p[k])}<div><div class="t" style="font-weight:600">${TEAM[p[k]].n}</div><div class="m">${TEAM[p[k]].r}</div></div></div>`).join("")}<div class="row" style="padding:7px 0;align-items:center"><span class="av" style="margin:0;background:var(--bluewash);color:var(--blue2)">C</span><div><div class="t" style="font-weight:600">${p.client.split(",")[0]}</div><div class="m">Client, sees updates, approvals and photos only</div></div></div></div></div>
+      <div class="panel"><div class="hd"><h3>Team</h3></div><div class="bd list">${["pm","sales","qs","design","site"].filter(k=>p[k]).map(k=>`<div class="row" style="padding:7px 0;align-items:center">${avatar(p[k])}<div><div class="t" style="font-weight:600">${TEAM[p[k]].n}</div><div class="m">${TEAM[p[k]].r}</div></div></div>`).join("")}<div class="row" style="padding:7px 0;align-items:center"><span class="av" style="margin:0;background:var(--bluewash);color:var(--blue2)">C</span><div><div class="t" style="font-weight:600">${esc(p.client.split(",")[0])}</div><div class="m">Client, sees updates, approvals and photos only</div></div></div></div></div>
     </div>
     <div class="panel" style="margin-top:14px">
       <div class="tabs" id="dtabs"><button class="tab" data-t="updates">Updates</button><button class="tab" data-t="vos">Variations (${p.vos.length})</button><button class="tab" data-t="snags">Snags (${p.snags.filter(s=>s[1]==="open").length} open)</button><button class="tab" data-t="site">Site log</button><button class="tab" data-t="appr">Approvals (${APPR.filter(a=>a.proj===p.id&&a.state==="open").length})</button></div>
       <div class="bd" id="dbody"></div>
     </div>`;
-  d.querySelector("#btnShare").onclick=()=>toast("Client link copied. They see updates, approvals and photos only.");
+  d.querySelector("#btnShare").onclick=()=>toast("Client view is not built yet. It will show updates, approvals and photos only.");
   d.querySelector("#dtabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(b){detailTab=b.dataset.t;renderDetailTab(p)}});
   renderDetailTab(p);
 }
@@ -586,33 +585,33 @@ function renderDetailTab(p){
   document.querySelectorAll("#dtabs .tab").forEach(b=>b.classList.toggle("on",b.dataset.t===detailTab));
   const b=$("#dbody");
   if(detailTab==="updates"){
-    b.innerHTML=`<div class="thread">${p.thread.map(([r,w,t,m])=>`<div class="msg ${r}"><span class="av ${r==="client"?"":r==="sales"?"b":""}" style="${r==="client"?"background:var(--bluewash);color:var(--blue2)":""}">${w.split(" ").map(s=>s[0]).join("").slice(0,2)}</span><div class="bub"><div class="who">${w}<span>${r==="client"?"Client":r==="sales"?"Sales":"Project manager"} · ${t}</span></div><p>${m}</p></div></div>`).join("")||"<div class='sub'>No messages yet.</div>"}</div>
+    b.innerHTML=`<div class="thread">${p.thread.map(([r,w,t,m])=>`<div class="msg ${r}"><span class="av ${r==="client"?"":r==="sales"?"b":""}" style="${r==="client"?"background:var(--bluewash);color:var(--blue2)":""}">${esc(w.split(" ").map(s=>s[0]).join("").slice(0,2))}</span><div class="bub"><div class="who">${esc(w)}<span>${r==="client"?"Client":r==="sales"?"Sales":"Project manager"} · ${esc(t)}</span></div><p>${esc(m)}</p></div></div>`).join("")||"<div class='sub'>No messages yet.</div>"}</div>
     <form class="compose" id="composeForm"><select id="composeAs"><option value="pm">As ${TEAM[p.pm].n} (PM)</option>${p.sales?`<option value="sales">As ${TEAM[p.sales].n} (Sales)</option>`:""}<option value="client">As client</option></select><input id="composeText" placeholder="Write an update everyone on this project can see"><button class="btn primary" type="submit">Post</button></form>`;
-    $("#composeForm").onsubmit=e=>{e.preventDefault();const v=$("#composeText").value.trim();if(!v)return;const as=$("#composeAs").value;const name=as==="pm"?TEAM[p.pm].n:as==="sales"?TEAM[p.sales].n:p.client.split(",")[0];p.thread.push([as,name,"Now",v]);renderDetailTab(p);toast("Posted. Client, PM and sales all see it.")};
+    $("#composeForm").onsubmit=e=>{e.preventDefault();const v=$("#composeText").value.trim();if(!v)return;const as=$("#composeAs").value;const name=as==="pm"?TEAM[p.pm].n:as==="sales"?TEAM[p.sales].n:p.client.split(",")[0];p.thread.push([as,name,"Now",v]);renderDetailTab(p);toast("Posted to the project thread.")};
   } else if(detailTab==="vos"){
-    b.innerHTML=p.vos.length?`<div class="tw"><table><thead><tr><th>Ref</th><th>Description</th><th class="num">Amount</th><th>Status</th></tr></thead><tbody>${p.vos.map(([r,dsc,a,s])=>`<tr><td><b>${r}</b></td><td>${dsc}</td><td class="num">${fmtRM(+a)}</td><td><span class="pill ${s.startsWith("Await")?"warn":"ok"}">${s}</span></td></tr>`).join("")}<tr><td></td><td><b>Total variations</b></td><td class="num"><b>${fmtRM(p.vos.reduce((s,v)=>s+ +v[2],0))}</b></td><td></td></tr></tbody></table></div><p class="sub" style="font-size:12.5px;margin-top:10px">Every variation is priced and approved here before the site does the work. That is where fit-out margin usually leaks.</p>`:`<div class="sub">No variations yet. Priced changes appear here before the site does the work.</div>`;
+    b.innerHTML=p.vos.length?`<div class="tw"><table><thead><tr><th>Ref</th><th>Description</th><th class="num">Amount</th><th>Status</th></tr></thead><tbody>${p.vos.map(([r,dsc,a,s])=>`<tr><td><b>${esc(r)}</b></td><td>${esc(dsc)}</td><td class="num">${fmtRM(+a)}</td><td><span class="pill ${s.startsWith("Await")?"warn":"ok"}">${esc(s)}</span></td></tr>`).join("")}<tr><td></td><td><b>Total variations</b></td><td class="num"><b>${fmtRM(p.vos.reduce((s,v)=>s+ +v[2],0))}</b></td><td></td></tr></tbody></table></div><p class="sub" style="font-size:12.5px;margin-top:10px">Every variation is priced and approved here before the site does the work. That is where fit-out margin usually leaks.</p>`:`<div class="sub">No variations yet. Priced changes appear here before the site does the work.</div>`;
   } else if(detailTab==="snags"){
-    b.innerHTML=p.snags.length?`<div class="list">${p.snags.map(([t,s],i)=>`<div class="row" style="align-items:center"><span class="stripe ${s==="open"?"warn":"ok"}"></span><div class="t" style="font-weight:600;${s==="closed"?"color:var(--ink3);text-decoration:line-through":""}">${t}</div><div class="r">${s==="open"?`<button class="btn sm" data-snag="${i}">Mark fixed</button>`:'<span class="pill ok">Fixed</span>'}</div></div>`).join("")}</div>`:`<div class="sub">No snags recorded. The snag list opens at practical completion.</div>`;
-    b.querySelectorAll("[data-snag]").forEach(x=>x.onclick=()=>{p.snags[+x.dataset.snag][1]="closed";renderDetailTab(p);toast("Snag closed with photo request sent to site")});
+    b.innerHTML=p.snags.length?`<div class="list">${p.snags.map(([t,s],i)=>`<div class="row" style="align-items:center"><span class="stripe ${s==="open"?"warn":"ok"}"></span><div class="t" style="font-weight:600;${s==="closed"?"color:var(--ink3);text-decoration:line-through":""}">${esc(t)}</div><div class="r">${s==="open"?`<button class="btn sm" data-snag="${i}">Mark fixed</button>`:'<span class="pill ok">Fixed</span>'}</div></div>`).join("")}</div>`:`<div class="sub">No snags recorded. The snag list opens at practical completion.</div>`;
+    b.querySelectorAll("[data-snag]").forEach(x=>x.onclick=()=>{p.snags[+x.dataset.snag][1]="closed";renderDetailTab(p);toast("Snag marked fixed.")});
   } else if(detailTab==="site"){
     const l=LOG.filter(x=>x.proj===p.id);
     b.innerHTML=l.length?`<div class="log">${l.map(logRow).join("")}</div>`:`<div class="sub">No site check-ins yet. Site log starts at site possession.</div>`;
   } else {
     const a=APPR.filter(x=>x.proj===p.id);
-    b.innerHTML=a.length?`<div class="list">${a.map(x=>`<div class="row"><span class="stripe ${x.state==="done"?"ok":x.days>=7?"bad":x.days>=3?"warn":"blue"}"></span><div><div class="t">${x.item}</div><div class="m">${x.type} · waiting on ${x.on}${x.impact?" · "+x.impact:""}</div></div><div class="r">${x.state==="done"?'<span class="pill ok">Done</span>':x.days+" days"}</div></div>`).join("")}</div>`:`<div class="sub">Nothing waiting.</div>`;
+    b.innerHTML=a.length?`<div class="list">${a.map(x=>`<div class="row"><span class="stripe ${x.state==="done"?"ok":x.days>=7?"bad":x.days>=3?"warn":"blue"}"></span><div><div class="t">${esc(x.item)}</div><div class="m">${esc(x.type)} · waiting on ${esc(x.on)}${x.impact?" · "+esc(x.impact):""}</div></div><div class="r">${x.state==="done"?'<span class="pill ok">Done</span>':x.days+" days"}</div></div>`).join("")}</div>`:`<div class="sub">Nothing waiting.</div>`;
   }
 }
 
 // ---------- timeline ----------
 function renderGantt(){
-  const start=new Date(shiftISO("2026-08-31"));const weeks=16;const _end=new Date(start);_end.setDate(_end.getDate()+weeks*7-1);$("#ganttRange").textContent=start.toLocaleDateString("en-GB",{month:"long"})+" to "+_end.toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+  const start=new Date(TODAY);start.setDate(start.getDate()-((start.getDay()+6)%7)-28);const weeks=16;const _end=new Date(start);_end.setDate(_end.getDate()+weeks*7-1);$("#ganttRange").textContent=start.toLocaleDateString("en-GB",{month:"long"})+" to "+_end.toLocaleDateString("en-GB",{month:"long",year:"numeric"});
   let h=`<div class="h first">Project</div>`;
   for(let i=0;i<weeks;i++){const d=new Date(start);d.setDate(d.getDate()+i*7);h+=`<div class="h">${d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</div>`}
   const map={Design:"design",Submission:"submit",Construction:"build",Snagging:"snag",Handover:"hand",DLP:"dlp"};
   const g=$("#gantt");g.innerHTML=h;
   P.forEach(p=>{
     const row=document.createElement("div");row.style.cssText="display:contents";
-    const lab=document.createElement("div");lab.className="lab";lab.innerHTML=`${p.name}<small>${PHASES[p.phase]} · opens ${fmtD(p.open)}</small>`;lab.style.cursor="pointer";lab.onclick=()=>openProject(p.id);g.appendChild(lab);
+    const lab=document.createElement("div");lab.className="lab";lab.innerHTML=`${esc(p.name)}<small>${PHASES[p.phase]} · opens ${fmtD(p.open)}</small>`;lab.style.cursor="pointer";lab.onclick=()=>openProject(p.id);g.appendChild(lab);
     const track=document.createElement("div");track.style.cssText="grid-column:2/-1;position:relative;display:grid;grid-template-columns:repeat(16,minmax(48px,1fr))";
     for(let i=0;i<weeks;i++){const d=new Date(start);d.setDate(d.getDate()+i*7);const isT=TODAY>=d&&TODAY<new Date(d.getTime()+7*86400000);const isM=d.getDate()<=7;const c=document.createElement("div");c.className="cell"+(isT?" today":"")+(isM?" month":"");track.appendChild(c)}
     Object.entries(p.plan).forEach(([ph,[s,e]])=>{
@@ -626,31 +625,31 @@ function renderGantt(){
 }
 
 // ---------- site ----------
-function logRow(l){return `<div class="row"><span class="stripe ${l.flag||"ok"}"></span><div><div class="t">${TEAM[l.who].n} · ${pj(l.proj).name}<span style="font-weight:500;color:var(--ink3)"> · ${pj(l.proj).venue}</span></div><div class="m">${l.note}</div>${l.flagText?`<div class="m" style="color:${l.flag==="bad"?"var(--bad)":"#9A6600"};font-weight:700;margin-top:4px">${l.flagText}</div>`:""}<div class="photos">${Array.from({length:l.photos},(_,i)=>`<span>IMG ${i+1}</span>`).join("")}</div></div><div class="r">${l.time}</div></div>`}
+function logRow(l){return `<div class="row"><span class="stripe ${l.flag||"ok"}"></span><div><div class="t">${TEAM[l.who].n} · ${esc(pj(l.proj).name)}<span style="font-weight:500;color:var(--ink3)"> · ${esc(pj(l.proj).venue)}</span></div><div class="m">${esc(l.note)}</div>${l.flagText?`<div class="m" style="color:${l.flag==="bad"?"var(--bad)":"var(--warnink)"};font-weight:700;margin-top:4px">${esc(l.flagText)}</div>`:""}<div class="photos">${Array.from({length:l.photos},(_,i)=>`<span>IMG ${i+1}</span>`).join("")}</div></div><div class="r">${l.time}</div></div>`}
 function renderSite(){
   const people=["farah","kumar"];
   $("#whoWhere").innerHTML=people.map(k=>{
     const stops=LOG.filter(l=>l.who===k);
     const planned={farah:[["15:30","hana","Cover for Kumar, glazier quote"]],kumar:[["16:00","aoi","Return, check carpenter headcount"]]}[k]||[];
     return `<div class="person"><div class="top"><span class="av ${TEAM[k].c}">${ini(k)}</span><div><div class="t" style="font-weight:800">${TEAM[k].n}</div><div class="role">${TEAM[k].r} · ${stops.length} check-ins today</div></div><span class="pill ok" style="margin-left:auto"><i></i>On site</span></div>
-    <div class="stops">${stops.map(s=>`<div class="stop"><span class="tm">${s.time}</span><span>${pj(s.proj).name}<span style="color:var(--ink3)"> · ${pj(s.proj).venue.split(",")[0]}</span></span><span class="st ok"></span></div>`).join("")}${planned.map(([t,pr,n])=>`<div class="stop"><span class="tm">${t}</span><span>${pj(pr).name}<span style="color:var(--ink3)"> · ${n}</span></span><span class="st now"></span></div>`).join("")}</div></div>`}).join("");
+    <div class="stops">${stops.map(s=>`<div class="stop"><span class="tm">${s.time}</span><span>${esc(pj(s.proj).name)}<span style="color:var(--ink3)"> · ${esc(pj(s.proj).venue.split(",")[0])}</span></span><span class="st ok"></span></div>`).join("")}${planned.map(([t,pr,n])=>`<div class="stop"><span class="tm">${t}</span><span>${esc(pj(pr).name)}<span style="color:var(--ink3)"> · ${esc(n)}</span></span><span class="st now"></span></div>`).join("")}</div></div>`}).join("");
   $("#ciCount").textContent=LOG.length+" today";
   $("#siteLog").innerHTML=LOG.slice().reverse().map(logRow).join("");
 }
 $("#btnCheckin").onclick=()=>{$("#checkinForm").hidden=false;$("#ciNote").focus()};
 $("#btnCancelCheckin").onclick=()=>{$("#checkinForm").hidden=true};
-$("#ciProj").innerHTML=P.filter(p=>p.phase>=3).map(p=>`<option value="${p.id}">${p.name}</option>`).join("");
-$("#formCheckin").onsubmit=e=>{e.preventDefault();const who=$("#ciWho").value.toLowerCase();const note=$("#ciNote").value.trim();if(!note)return;const fl=$("#ciFlag").value;const now=new Date();LOG.push({who,proj:$("#ciProj").value,time:now.toTimeString().slice(0,5),note,flag:fl,flagText:fl==="bad"?"Blocking. Flagged from site.":fl==="warn"?"Needs a decision. Flagged from site.":"",photos:0});$("#ciNote").value="";$("#checkinForm").hidden=true;renderSite();renderOverview();toast("Check-in saved. PM notified"+(fl?" and flagged.":"."))};
+$("#ciProj").innerHTML=P.filter(p=>p.phase>=3).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
+$("#formCheckin").onsubmit=e=>{e.preventDefault();const who=$("#ciWho").value.toLowerCase();const note=$("#ciNote").value.trim();if(!note)return;const fl=$("#ciFlag").value;const now=new Date();LOG.push({who,proj:$("#ciProj").value,time:now.toTimeString().slice(0,5),note,flag:fl,flagText:fl==="bad"?"Blocking. Flagged from site.":fl==="warn"?"Needs a decision. Flagged from site.":"",photos:0});$("#ciNote").value="";$("#checkinForm").hidden=true;renderSite();renderOverview();toast("Check-in saved"+(fl?" and flagged on Today.":"."))};
 
 // ---------- approvals ----------
 let apprF="open";
 function renderAppr(){
   const list=APPR.filter(a=>apprF==="done"?a.state==="done":a.state==="open"&&(apprF==="open"||a.side===apprF)).sort((a,b)=>b.days-a.days);
-  $("#apprTable tbody").innerHTML=list.map(a=>`<tr><td><b>${a.item}</b></td><td><a href="#" data-open="${a.proj}" style="color:var(--blue2);font-weight:700;text-decoration:none">${pj(a.proj).name}</a></td><td><span class="pill grey">${a.type}</span></td><td>${a.on}${a.side==="ours"?' <span class="pill blue">SEMBA</span>':""}</td><td class="num"><span class="pill ${a.state==="done"?"ok":a.days>=7?"bad":a.days>=3?"warn":"grey"}">${a.state==="done"?"Done":a.days}</span></td><td style="max-width:28ch;color:var(--ink2)">${a.impact}</td><td>${a.state==="open"?`<div style="display:flex;gap:4px"><button class="btn sm" data-chase="${a.id}">Chase</button><button class="btn sm primary" data-done="${a.id}">Done</button></div>`:""}</td></tr>`).join("")||`<tr><td colspan="7" class="sub">Nothing here.</td></tr>`;
+  $("#apprTable tbody").innerHTML=list.map(a=>`<tr><td><b>${esc(a.item)}</b></td><td><a href="#" data-open="${a.proj}" style="color:var(--blue2);font-weight:700;text-decoration:none">${esc(pj(a.proj).name)}</a></td><td><span class="pill grey">${esc(a.type)}</span></td><td>${esc(a.on)}${a.side==="ours"?' <span class="pill blue">SEMBA</span>':""}</td><td class="num"><span class="pill ${a.state==="done"?"ok":a.days>=7?"bad":a.days>=3?"warn":"grey"}">${a.state==="done"?"Done":a.days}</span></td><td style="max-width:28ch;color:var(--ink2)">${esc(a.impact)}</td><td>${a.state==="open"?`<div style="display:flex;gap:4px"><button class="btn sm" data-chase="${a.id}">Chase</button><button class="btn sm primary" data-done="${a.id}">Done</button></div>`:""}</td></tr>`).join("")||`<tr><td colspan="7" class="sub">Nothing here.</td></tr>`;
   $("#nAppr").textContent=APPR.filter(a=>a.state==="open").length;
 }
 $("#apprFilter").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;apprF=b.dataset.f;document.querySelectorAll("#apprFilter .chip").forEach(x=>x.classList.toggle("on",x===b));renderAppr()});
-$("#apprTable").addEventListener("click",e=>{const d=e.target.closest("[data-done]"),c=e.target.closest("[data-chase]");if(d){APPR.find(a=>a.id==d.dataset.done).state="done";renderAppr();renderOverview();toast("Marked done. Timeline updated.")}if(c){const a=APPR.find(x=>x.id==c.dataset.chase);toast("Chaser drafted to "+a.on.split(" (")[0]+". Review before it sends.")}});
+$("#apprTable").addEventListener("click",e=>{const d=e.target.closest("[data-done]"),c=e.target.closest("[data-chase]");if(d){APPR.find(a=>a.id==d.dataset.done).state="done";renderAppr();renderOverview();toast("Marked done.")}if(c){const a=APPR.find(x=>x.id==c.dataset.chase);toast("Sample only. Nothing was sent to "+a.on.split(" (")[0]+".")}});
 
 // ---------- assistant ----------
 function renderPrompts(){$("#prompts").innerHTML=PROMPTS.map((p,i)=>`<button class="prompt" data-p="${i}">${p.t}<small>${p.s}</small></button>`).join("")}
@@ -688,9 +687,9 @@ function qTotals(){const mat=QL.reduce((a,r)=>a+r.q*r.m,0),lab=QL.reduce((a,r)=>
 function renderQLines(){
   $("#qLines tbody").innerHTML=QL.map((r,i)=>`<tr>
    <td><select data-i="${i}" data-k="s">${QSECTIONS.map(s=>`<option ${s===r.s?"selected":""}>${s}</option>`).join("")}</select></td>
-   <td><input data-i="${i}" data-k="d" value="${r.d.replace(/"/g,"&quot;")}" style="width:100%"></td>
+   <td><input data-i="${i}" data-k="d" value="${esc(r.d)}" style="width:100%"></td>
    <td class="num"><input data-i="${i}" data-k="q" type="number" value="${r.q}" min="0" step="any" style="width:70px;text-align:right"></td>
-   <td><input data-i="${i}" data-k="u" value="${r.u}" style="width:60px"></td>
+   <td><input data-i="${i}" data-k="u" value="${esc(r.u)}" style="width:60px"></td>
    <td class="num"><input data-i="${i}" data-k="m" type="number" value="${r.m}" min="0" step="any" style="width:90px;text-align:right"></td>
    <td class="num"><input data-i="${i}" data-k="l" type="number" value="${r.l}" min="0" step="any" style="width:90px;text-align:right"></td>
    <td class="num"><b>${fmtRM(r.q*(r.m+r.l))}</b></td>
@@ -705,14 +704,14 @@ $("#qLines").addEventListener("click",e=>{const b=e.target.closest("[data-del]")
 $("#qForm").addEventListener("input",e=>{if(["qCont","qDisc","qSst"].includes(e.target.id))renderQLines()});
 $("#btnQuoteAdd").onclick=()=>{QL.push({s:QSECTIONS[0],d:"",q:1,u:"lot",m:0,l:0});renderQLines();const last=$("#qLines tbody tr:last-child input[data-k=d]");last&&last.focus()};
 $("#btnQuoteTemplate").onclick=()=>{qLoadTemplate();toast("Standard template loaded")};
-function qFillProjects(){$("#qProj").innerHTML=P.map(p=>`<option value="${p.id}">${p.name}</option>`).join("");qProjPick()}
+function qFillProjects(){$("#qProj").innerHTML=P.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");qProjPick()}
 function qProjPick(){const p=pj($("#qProj").value);if(!p)return;$("#qClient").value=p.client.split(", ")[1]||p.client;$("#qAttn").value=p.client.split(",")[0];$("#qSite").value=p.venue;const a=(p.kind.match(/([\d,]+) sq ft/)||[])[1];$("#qArea").value=a?a.replace(",",""):""}
 $("#qProj").addEventListener("change",qProjPick);
 $("#btnQuoteGen").onclick=()=>{
   const t=qTotals();const valid=rel(+$("#qValid").value||30);const dep=+$("#qDep").value||0;
   const groups={};QL.forEach(r=>{(groups[r.s]=groups[r.s]||[]).push(r)});
   let n=0;
-  const body=QSECTIONS.filter(s=>groups[s]).map(s=>`<tr><td colspan="6" style="background:var(--bg);font-weight:800;padding:8px 10px">${s}</td></tr>`+groups[s].map(r=>`<tr><td style="color:var(--ink3)">${++n}</td><td>${r.d}</td><td class="num">${r.q}</td><td>${r.u}</td><td class="num">${fmtRM(r.q*r.m)}</td><td class="num">${fmtRM(r.q*r.l)}</td></tr>`).join("")+`<tr><td></td><td style="font-weight:700">Section total</td><td></td><td></td><td class="num" style="font-weight:700">${fmtRM(groups[s].reduce((a,r)=>a+r.q*r.m,0))}</td><td class="num" style="font-weight:700">${fmtRM(groups[s].reduce((a,r)=>a+r.q*r.l,0))}</td></tr>`).join("");
+  const body=QSECTIONS.filter(s=>groups[s]).map(s=>`<tr><td colspan="6" style="background:var(--bg);font-weight:800;padding:8px 10px">${s}</td></tr>`+groups[s].map(r=>`<tr><td style="color:var(--ink3)">${++n}</td><td>${esc(r.d)}</td><td class="num">${r.q}</td><td>${esc(r.u)}</td><td class="num">${fmtRM(r.q*r.m)}</td><td class="num">${fmtRM(r.q*r.l)}</td></tr>`).join("")+`<tr><td></td><td style="font-weight:700">Section total</td><td></td><td></td><td class="num" style="font-weight:700">${fmtRM(groups[s].reduce((a,r)=>a+r.q*r.m,0))}</td><td class="num" style="font-weight:700">${fmtRM(groups[s].reduce((a,r)=>a+r.q*r.l,0))}</td></tr>`).join("");
   $("#qDoc").hidden=false;
   $("#qDoc").innerHTML=`<div class="panel"><div class="hd"><h3>Quotation ${qNumber()}</h3><div style="display:flex;gap:6px"><button class="btn sm" id="btnQuoteCopy">Copy as text</button><button class="btn sm primary" id="btnQuoteIssue">Issue and file to project</button></div></div>
   <div class="bd" id="qPaper" style="max-width:900px;margin:0 auto;font-size:13px">
@@ -721,8 +720,8 @@ $("#btnQuoteGen").onclick=()=>{
       <div style="text-align:right"><div class="eyebrow">Quotation</div><div style="font-size:18px;font-weight:800">${qNumber()}</div><div style="color:var(--ink2)">Date ${TODAY.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}<br>Valid until ${valid.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}<br>Prepared by ${$("#qBy").value}</div></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)">
-      <div><div class="eyebrow">To</div><b>${$("#qClient").value||"(client)"}</b><br>Attn ${$("#qAttn").value||""}</div>
-      <div><div class="eyebrow">Project</div><b>Interior fit-out works, ${$("#qSite").value||"(site)"}</b><br>${$("#qArea").value?$("#qArea").value+" sq ft · ":""}Construction period ${$("#qDur").value} weeks from site possession</div>
+      <div><div class="eyebrow">To</div><b>${esc($("#qClient").value||"(client)")}</b><br>Attn ${esc($("#qAttn").value)}</div>
+      <div><div class="eyebrow">Project</div><b>Interior fit-out works, ${esc($("#qSite").value||"(site)")}</b><br>${$("#qArea").value?$("#qArea").value+" sq ft · ":""}Construction period ${$("#qDur").value} weeks from site possession</div>
     </div>
     <div class="tw" style="margin-top:12px"><table><thead><tr><th>No</th><th>Description of works</th><th class="num">Qty</th><th>Unit</th><th class="num">Material RM</th><th class="num">Labour RM</th></tr></thead><tbody>${body}</tbody></table></div>
     <div style="display:flex;justify-content:flex-end;margin-top:14px"><dl class="kv" style="min-width:340px">
@@ -738,7 +737,7 @@ $("#btnQuoteGen").onclick=()=>{
       <p style="margin:0 0 8px;break-inside:avoid"><b style="color:var(--ink)">Excluded.</b> Mall fit-out deposit, utility deposits and connection fees, loose furniture unless listed, kitchen equipment, IT and POS, and works not described above.</p>
       <p style="margin:0 0 8px;break-inside:avoid"><b style="color:var(--ink)">Validity.</b> ${$("#qValid").value} days from the date above. Material prices are subject to reconfirmation after that.</p>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px"><div style="border-top:1px solid var(--ink2);padding-top:6px">For ${SEMBA.name}<br><span style="color:var(--ink3)">Name, date</span></div><div style="border-top:1px solid var(--ink2);padding-top:6px">Accepted for ${$("#qClient").value||"client"}<br><span style="color:var(--ink3)">Name, designation, company stamp, date</span></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px"><div style="border-top:1px solid var(--ink2);padding-top:6px">For ${SEMBA.name}<br><span style="color:var(--ink3)">Name, date</span></div><div style="border-top:1px solid var(--ink2);padding-top:6px">Accepted for ${esc($("#qClient").value||"client")}<br><span style="color:var(--ink3)">Name, designation, company stamp, date</span></div></div>
   </div></div>`;
   $("#btnQuoteCopy").onclick=()=>{const txt=$("#qPaper").innerText;navigator.clipboard?.writeText(txt).then(()=>toast("Quotation copied as text")).catch(()=>toast("Select the quotation and copy"))};
   $("#btnQuoteIssue").onclick=()=>{const p=pj($("#qProj").value);if(p){p.budget=Math.round(t.total);p.thread.push(["pm",TEAM[p.pm].n,"Now","Quotation "+qNumber()+" issued, "+fmtRM(t.total)+", valid "+$("#qValid").value+" days."]);}QSEQ++;renderQLines();renderOverview();toast("Filed to "+(p?p.name:"project")+" as contract sum. Next number ready.")};
@@ -759,14 +758,14 @@ $("#cForm").onsubmit=e=>{e.preventDefault();
   const open=$("#cOpen").value||shiftISO("2027-01-29");
   const pm=$("#cPm").value,sales=$("#cSales").value;
   const kind=$("#cType").value+($("#cArea").value?", "+(+$("#cArea").value).toLocaleString("en-MY")+" sq ft":"");
-  P.push({id,name:brand,kind,venue:$("#cVenue").value,client:$("#cPic").value+", "+$("#cCompany").value,phase:0,status:"blue",statusText:"New",pm,sales,qs:"jun",site:"",design:"yuki",open,budget:0,committed:0,claimed:0,vo:0,plan:{Design:[shiftISO("2026-10-12"),shiftISO("2026-11-06")],Submission:[shiftISO("2026-11-09"),shiftISO("2026-12-04")],Construction:[shiftISO("2026-12-14"),shiftISO("2027-02-05")],Snagging:[shiftISO("2027-02-08"),shiftISO("2027-02-12")],Handover:[shiftISO("2027-02-15"),shiftISO("2027-02-19")],DLP:[shiftISO("2027-02-20"),shiftISO("2027-08-19")]},risk:"",milestones:[["Site survey",shiftISO("2026-10-05"),"due"],["Brief signed off",shiftISO("2026-10-09"),"due"]],vos:[],snags:[],thread:[["sales",TEAM[sales].n,"Now","Client created. Code "+cCode()+". Folder set opened, brief and site survey next."]]});
+  P.push({id,name:brand,kind,venue:$("#cVenue").value,client:$("#cPic").value+", "+$("#cCompany").value,phase:0,status:"blue",statusText:"New",pm,sales,qs:"jun",site:"",design:"yuki",open,budget:0,committed:0,claimed:0,vo:0,plan:{Design:[shiftISO("2026-10-12"),shiftISO("2026-11-06")],Submission:[shiftISO("2026-11-09"),shiftISO("2026-12-04")],Construction:[shiftISO("2026-12-14"),shiftISO("2027-02-05")],Snagging:[shiftISO("2027-02-08"),shiftISO("2027-02-12")],Handover:[shiftISO("2027-02-15"),shiftISO("2027-02-19")],DLP:[shiftISO("2027-02-20"),shiftISO("2027-08-19")]},risk:"",milestones:[["Site survey",shiftISO("2026-10-05"),"due"],["Brief signed off",shiftISO("2026-10-09"),"due"]],vos:[],snags:[],thread:[["sales",TEAM[sales].n,"Now","Client created. Code "+cCode()+". Brief and site survey next."]]});
   const win=`mkdir "Clients\\${root}\\`+FOLDERS.join(`" "Clients\\${root}\\`)+`"`;
   const mac=`mkdir -p "Clients/${root}/"{"`+FOLDERS.join('","')+`"}`;
   $("#cResult").hidden=false;
   $("#cResult").innerHTML=`<div class="panel"><div class="hd"><h3>Created ${cCode()}</h3><button class="btn sm primary" data-open="${id}">Open project</button></div><div class="bd">
-    <p style="margin:0 0 10px">${brand} is now a project in Brief phase, owned by ${TEAM[pm].n} with ${TEAM[sales].n} on sales. The folder set below is ready to create on the shared drive.</p>
-    <div class="eyebrow" style="margin-bottom:4px">Windows</div><pre style="margin:0 0 10px;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cWin">${win}</pre>
-    <div class="eyebrow" style="margin-bottom:4px">Mac</div><pre style="margin:0;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cMac">${mac}</pre></div></div>`;
+    <p style="margin:0 0 10px">${esc(brand)} is now a project in Brief phase, owned by ${TEAM[pm].n} with ${TEAM[sales].n} on sales. The folder set below is ready to create on the shared drive.</p>
+    <div class="eyebrow" style="margin-bottom:4px">Windows</div><pre style="margin:0 0 10px;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cWin">${esc(win)}</pre>
+    <div class="eyebrow" style="margin-bottom:4px">Mac</div><pre style="margin:0;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cMac">${esc(mac)}</pre></div></div>`;
   $("#btnCopyTree").hidden=false;$("#btnCopyTree").onclick=()=>{navigator.clipboard?.writeText(win+"\n"+mac).then(()=>toast("Commands copied")).catch(()=>toast("Select and copy the commands"))};
   CSEQ++;renderOverview();renderCards("#projCards","all");renderGantt();qFillProjects();$("#cForm").reset();setTimeout(cTree,0);toast("Client created and added to projects");
 };
