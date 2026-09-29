@@ -1,0 +1,27 @@
+# Sitebook, working notes for Claude Code
+
+Read `PRD.md` first. It holds the domain model, every screen, the design tokens, the date engine and the build order. This file is the short version plus the rules that are easy to break.
+
+## What this is
+A single-file project management prototype for SEMBA Malaysia, a fit-out firm in KL. `index.html` is the whole app, no build step, no dependencies beyond two Google Fonts. Open it in a browser and it runs on sample data. It was published as a Claude artifact for a client demo, and is now being turned into a local app.
+
+## Start here
+1. `open index.html` (or serve it, `npx serve .`) and click through all eight tabs so you know what exists.
+2. Next job is PRD section 7.1, a Node server that creates client folders on disk. Then 7.2, persistence.
+3. Keep `index.html` working as a standalone file. The server adds capability, it must not become a requirement.
+
+## Layout of index.html
+Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme blocks, components). Markup, one `<section class="view">` per tab. `<script>` with data (`PHASES`, `TEAM`, `P` projects, `APPR`, `LOG`, `PROMPTS`, `QTEMPLATE`, `FOLDERS`), helpers, then one render function per screen, then the date engine, then boot at the bottom.
+
+## Rules
+1. Copy has no dashes and no colons in running text. Use commas, full stops, parentheses, numbered lists.
+2. Do not claim a feature that is not built. "Sample output" and "Concept prototype" labels stay until the thing is real.
+3. Colours are tokens on `:root`, redefined in the two dark blocks. Never a literal colour inside a component.
+4. Sample tenants are fictional. Do not put SEMBA's real project names in demo data.
+5. Money is computed once. `qTotals()` is the only place quotation maths lives.
+6. The date engine shifts all sample dates to today. Remove it only when real data replaces the sample, and keep `TODAY`.
+7. Service tax on quotations is applied to labour only, per Service Tax Policy 7/2025. Rate stays a field. SEMBA's finance confirms before a real quote goes out.
+8. The owner edits files between sessions. Re-read before editing, change in place, never restore something he removed. Flag it instead.
+
+## Owner
+Sritesh Naidu, AI Lead, Lemon Sky Edge. He is the trainer selling SEMBA an AI course, this tool is the demo and the seed of a solutions engagement. When in doubt about scope, the question is "does this help him show capability without promising what Lemon Sky has not agreed to build".
