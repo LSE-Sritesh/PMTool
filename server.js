@@ -1,6 +1,7 @@
-// Project Management Tool, local server (PRD 7.1, 7.2 and 7.3). No dependencies, run with "node server.js".
+// Project Management Tool, local server (PRD 7.1 to 7.5). No dependencies, run with "node server.js".
 // Serves index.html, creates the client folder set on disk, saves what the user adds to data/state.json,
-// and prints issued quotations to PDF using the Chrome or Edge already on the computer.
+// prints issued quotations to PDF using the Chrome or Edge already on the computer, serves the read only
+// client page for each shared project, and stores site photos in the client folder.
 // Listens on this computer only. index.html still works on its own without it.
 const http = require("http");
 const fs = require("fs");
@@ -14,6 +15,10 @@ const DEFAULTS = { port: 3000, clientsRoot: "Clients", dataDir: "data" };
 const MAX_BODY = 64 * 1024;
 const MAX_STATE = 1024 * 1024;
 const MAX_ROWS = 5000;
+const MAX_VIEW = 512 * 1024;
+const MAX_PHOTO = 15 * 1024 * 1024;
+const PHOTO_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+const TOKEN = /^[a-z0-9]{12,32}$/;
 
 // Keep in step with FOLDERS in index.html
 const FOLDERS = [
@@ -28,7 +33,7 @@ const FOLDERS = [
 ];
 
 // What the page is allowed to save. Sample data is never saved, it lives in index.html.
-const STATE_KEYS = ["projects", "posts", "checkins", "apprDone", "snagsFixed", "quotes"];
+const STATE_KEYS = ["projects", "posts", "checkins", "apprDone", "snagsFixed", "quotes", "shares"];
 
 function loadConfig() {
   const file = path.join(APP_DIR, "sitebook.config.json");
@@ -130,6 +135,51 @@ function readJson(req, max) {
     });
     req.on("error", () => reject(fail(400, "The request could not be read.")));
   });
+}
+
+// Raw bytes, for photo uploads
+function readRaw(req, max) {
+  return new Promise((resolve, reject) => {
+    if (Number(req.headers["content-length"]) > max) return reject(fail(413, "That photo is too large."));
+    const chunks = [];
+    let size = 0;
+    req.on("data", (c) => {
+      size += c.length;
+      if (size > max) {
+        reject(fail(413, "That photo is too large."));
+        req.destroy();
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", () => reject(fail(400, "The photo could not be read.")));
+  });
+}
+
+// The client folder on disk for a client code, or null when there is none (sample projects)
+function clientFolder(root, code) {
+  if (!/^SMB-\d{4}-\d{3,6}$/.test(String(code || ""))) return null;
+  if (!fs.existsSync(root)) return null;
+  const hit = fs.readdirSync(root).find((n) => n === code || n.startsWith(code + " "));
+  return hit ? path.join(root, hit) : null;
+}
+
+// The page's own fonts and stylesheet, so other pages look the same as the tool
+function pageStyle() {
+  const index = fs.readFileSync(path.join(APP_DIR, "index.html"), "utf8");
+  const style = (index.match(/<style>[\s\S]*?<\/style>/) || [""])[0];
+  const fonts = (index.match(/<link rel="stylesheet"[^>]*>/) || [""])[0];
+  return fonts + "\n" + style;
+}
+
+function sendHtml(res, status, html) {
+  res.writeHead(status, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": Buffer.byteLength(html),
+    "Cache-Control": "no-store",
+  });
+  res.end(html);
 }
 
 // ---------- client folders (PRD 7.1) ----------
@@ -289,11 +339,8 @@ function findBrowser(cfg) {
 
 // The quotation is wrapped in the page's own stylesheet so the PDF matches the screen
 function printPage(html) {
-  const index = fs.readFileSync(path.join(APP_DIR, "index.html"), "utf8");
-  const style = (index.match(/<style>[\s\S]*?<\/style>/) || [""])[0];
-  const fonts = (index.match(/<link rel="stylesheet"[^>]*>/) || [""])[0];
   const safe = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Quotation</title>${fonts}${style}</head><body><div id="qDoc"><div class="panel">${safe}</div></div></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Quotation</title>${pageStyle()}</head><body><div id="qDoc"><div class="panel">${safe}</div></div></body></html>`;
 }
 
 // Edge's launcher returns before the file is written, so we watch the file rather than the exit code
@@ -348,13 +395,8 @@ async function quotePdf(req, res, cfg) {
   // Into the client's 03 folder when it exists, otherwise into Clients/Quotations
   const root = cfg.clientsRoot;
   fs.mkdirSync(root, { recursive: true });
-  const code = String(b.code || "");
-  let folder = null;
-  if (/^SMB-\d{4}-\d{3,6}$/.test(code)) {
-    const hit = fs.readdirSync(root).find((n) => n === code || n.startsWith(code + " "));
-    if (hit) folder = path.join(root, hit, FOLDERS[2]);
-  }
-  if (!folder) folder = path.join(root, "Quotations");
+  const cf = clientFolder(root, b.code);
+  const folder = cf ? path.join(cf, FOLDERS[2]) : path.join(root, "Quotations");
   fs.mkdirSync(folder, { recursive: true });
 
   const base = safeName(no + " " + String(b.title || "")) || no;
@@ -377,6 +419,87 @@ async function quotePdf(req, res, cfg) {
 
   console.log(`Saved ${pdf}`);
   send(res, 201, { ok: true, pdf, folder, where: path.relative(root, folder) });
+}
+
+// ---------- client view (PRD 7.4) ----------
+// The tool writes a client safe copy of a project under a private token. The client page reads it back.
+
+function viewFile(cfg, token) {
+  return path.join(cfg.dataDir, "clientviews", token + ".json");
+}
+
+async function saveClientView(req, res, cfg, token) {
+  const b = await readJson(req, MAX_VIEW);
+  if (!b.view || typeof b.view !== "object" || Array.isArray(b.view)) {
+    return send(res, 400, { ok: false, error: "The client view must be an object." });
+  }
+  fs.mkdirSync(path.join(cfg.dataDir, "clientviews"), { recursive: true });
+  fs.writeFileSync(viewFile(cfg, token), JSON.stringify({ proj: String(b.proj || ""), savedAt: new Date().toISOString(), view: b.view }, null, 2));
+  send(res, 200, { ok: true, token });
+}
+
+function readClientView(cfg, token, res) {
+  const file = viewFile(cfg, token);
+  if (!fs.existsSync(file)) return send(res, 404, { ok: false, error: "This link is not active." });
+  try {
+    const j = JSON.parse(fs.readFileSync(file, "utf8"));
+    send(res, 200, { ok: true, savedAt: j.savedAt, view: j.view });
+  } catch (e) {
+    send(res, 500, { ok: false, error: "This project page could not be read." });
+  }
+}
+
+function notActivePage() {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Link not active</title>${pageStyle()}</head><body><div style="max-width:560px;margin:60px auto;padding:0 16px"><div class="panel"><div class="bd"><h3 style="margin-bottom:6px">This link is not active</h3><p class="sub">Ask your SEMBA project manager for a new one.</p></div></div></div></body></html>`;
+}
+
+function clientPage(cfg, token, res) {
+  if (!TOKEN.test(token) || !fs.existsSync(viewFile(cfg, token))) return sendHtml(res, 404, notActivePage());
+  const tpl = fs.readFileSync(path.join(APP_DIR, "client.html"), "utf8");
+  sendHtml(res, 200, tpl.replace("<!--STYLE-->", pageStyle()).replace(/<!--TOKEN-->/g, token));
+}
+
+// ---------- site photos (PRD 7.5) ----------
+// One photo per request, raw bytes. Named "YYYY-MM-DD HHMM <coordinator> <n>.jpg" in the client's 06 folder.
+
+async function savePhoto(req, res, cfg, query) {
+  const type = String(req.headers["content-type"] || "").split(";")[0].trim().toLowerCase();
+  const ext = PHOTO_TYPES[type];
+  if (!ext) return send(res, 415, { ok: false, error: "Photos must be JPEG, PNG or WebP." });
+  const buf = await readRaw(req, MAX_PHOTO);
+  if (!buf.length) return send(res, 400, { ok: false, error: "The photo was empty." });
+
+  const root = cfg.clientsRoot;
+  fs.mkdirSync(root, { recursive: true });
+  const cf = clientFolder(root, query.get("code"));
+  const folder = cf ? path.join(cf, FOLDERS[5]) : path.join(root, "Site photos", safeName(query.get("title")) || "Project");
+  fs.mkdirSync(folder, { recursive: true });
+
+  let at = new Date(query.get("at") || Date.now());
+  if (isNaN(at)) at = new Date();
+  const two = (n) => String(n).padStart(2, "0");
+  const stamp = `${at.getFullYear()}-${two(at.getMonth() + 1)}-${two(at.getDate())} ${two(at.getHours())}${two(at.getMinutes())}`;
+  const who = safeName(query.get("who")) || "site";
+  let n = Math.max(1, Math.min(99, Number(query.get("n")) || 1));
+  let file = path.join(folder, `${stamp} ${who} ${n}.${ext}`);
+  while (fs.existsSync(file)) file = path.join(folder, `${stamp} ${who} ${++n}.${ext}`);
+  if (!inside(root, file)) return send(res, 400, { ok: false, error: "That name would put the photo outside the clients folder." });
+
+  fs.writeFileSync(file, buf, { flag: "wx" });
+  send(res, 201, { ok: true, file: path.relative(root, file), name: path.basename(file) });
+}
+
+function servePhoto(cfg, query, res) {
+  const rel = String(query.get("f") || "");
+  const file = path.resolve(cfg.clientsRoot, rel);
+  const ext = path.extname(file).toLowerCase().replace(".", "").replace("jpeg", "jpg");
+  const type = Object.keys(PHOTO_TYPES).find((t) => PHOTO_TYPES[t] === ext);
+  if (!rel || !type || !inside(cfg.clientsRoot, file) || !fs.existsSync(file)) return send(res, 404, { ok: false, error: "Photo not found." });
+  fs.readFile(file, (err, buf) => {
+    if (err) return send(res, 500, { ok: false, error: "The photo could not be read." });
+    res.writeHead(200, { "Content-Type": type, "Content-Length": buf.length, "Cache-Control": "private, max-age=3600" });
+    res.end(buf);
+  });
 }
 
 // ---------- server ----------
@@ -406,7 +529,8 @@ function makeHandler(cfg) {
       if (!hosts.has(req.headers.host || "")) return send(res, 403, { ok: false, error: "Open the tool at localhost." });
       if (req.headers.origin && !origins.has(req.headers.origin)) return send(res, 403, { ok: false, error: "Requests must come from the tool's own page." });
 
-      const url = new URL(req.url, "http://localhost").pathname;
+      const u = new URL(req.url, "http://localhost");
+      const url = u.pathname;
       const read = req.method === "GET" || req.method === "HEAD";
 
       if (read && (url === "/" || url === "/index.html")) return serveIndex(req, res);
@@ -424,6 +548,15 @@ function makeHandler(cfg) {
       if (req.method === "PUT" && url === "/api/state") return await saveState(req, res, cfg);
       if (req.method === "POST" && url === "/api/clients") return await createClient(req, res, cfg);
       if (req.method === "POST" && url === "/api/quotes/pdf") return await quotePdf(req, res, cfg);
+      if (read && url.startsWith("/client/")) return clientPage(cfg, url.slice(8), res);
+      if (url.startsWith("/api/client/")) {
+        const token = url.slice(12);
+        if (!TOKEN.test(token)) return send(res, 404, { ok: false, error: "This link is not active." });
+        if (read) return readClientView(cfg, token, res);
+        if (req.method === "PUT") return await saveClientView(req, res, cfg, token);
+      }
+      if (req.method === "POST" && url === "/api/photos") return await savePhoto(req, res, cfg, u.searchParams);
+      if (read && url === "/api/photo") return servePhoto(cfg, u.searchParams, res);
 
       send(res, 404, { ok: false, error: "Not found." });
     } catch (e) {

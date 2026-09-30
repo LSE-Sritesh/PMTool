@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Project update, SEMBA Malaysia</title>
+<!--STYLE-->
+<style>
+/* client view, a read only page per project (PRD 7.4). The server fills in the main stylesheet above. */
+.wrap{max-width:820px;margin:0 auto;padding:24px 16px 48px}
+.chead{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.chead .mark{width:40px;height:40px;border-radius:9px;background:var(--bronze);display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:24px;color:var(--navy2);flex:none}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.shots a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg)}
+.shots img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.shots small{display:block;padding:5px 8px;font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.cfoot{margin-top:22px;font-size:12px;color:var(--ink3);line-height:1.6}
+@media (max-width:700px){.cgrid{grid-template-columns:1fr}.stepper{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="chead"><div class="mark">S</div><div><div class="eyebrow">SEMBA Malaysia · Project update</div><div id="cFor" class="sub" style="margin-top:0"></div></div></div>
+  <div id="cBody"><div class="sub">Loading your project.</div></div>
+  <div class="cfoot" id="cFoot"></div>
+</div>
+<script>
+const TOKEN="<!--TOKEN-->";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtD=s=>{const d=new Date(s);return isNaN(d)?"":d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})};
+const fmtDL=s=>{const d=new Date(s);return isNaN(d)?"":d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})};
+const photoUrl=f=>"/api/photo?f="+encodeURIComponent(f);
+const $=s=>document.querySelector(s);
+let last="";
+
+function render(v){
+  document.title="Project update, "+v.name;
+  $("#cFor").textContent="Prepared for "+v.client+" by "+v.pm+", project manager";
+  const steps=v.phases.map(ph=>`<div class="step ${ph.state}">${esc(ph.name)}<small>${ph.plan?fmtD(ph.plan[0])+" to "+fmtD(ph.plan[1]):"&nbsp;"}</small></div>`).join("");
+  const waiting=v.approvals.length?v.approvals.map(a=>`<div class="row"><span class="stripe ${a.days>=7?"bad":a.days>=3?"warn":"blue"}"></span><div><div class="t">${esc(a.item)}</div><div class="m">${esc(a.type)} · waiting ${a.days} day${a.days===1?"":"s"}</div></div></div>`).join(""):`<div class="sub">Nothing is waiting on you right now.</div>`;
+  const miles=v.milestones.map(m=>`<div class="row" style="padding:8px 0"><span class="stripe ${m.state==="done"?"ok":m.state==="late"?"bad":""}"></span><div class="t" style="font-weight:600">${esc(m.title)}</div><div class="r">${fmtD(m.date)}<br><span class="pill ${m.state==="done"?"ok":m.state==="late"?"bad":"grey"}" style="margin-top:2px">${m.state==="done"?"Done":m.state==="late"?"Overdue":"Due"}</span></div></div>`).join("")||`<div class="sub">No milestones set yet.</div>`;
+  const updates=v.updates.map(u=>`<div class="msg ${esc(u.role)}"><span class="av ${u.role==="client"?"":u.role==="sales"?"b":""}" style="${u.role==="client"?"background:var(--bluewash);color:var(--blue2)":""}">${esc(u.name.split(" ").map(s=>s[0]).join("").slice(0,2))}</span><div class="bub"><div class="who">${esc(u.name)}<span>${u.role==="client"?"You":u.role==="sales"?"Sales":"Project manager"} · ${esc(u.time)}</span></div><p>${esc(u.text)}</p></div></div>`).join("")||`<div class="sub">No updates yet.</div>`;
+  const shots=v.photos.length?`<div class="shots">${v.photos.map(s=>`<a href="${photoUrl(s.file)}" target="_blank" rel="noopener"><img src="${photoUrl(s.file)}" alt="Site photo" loading="lazy"><small>${fmtD(s.day)} ${esc(s.time)}</small></a>`).join("")}</div>`:`<div class="sub">No photos yet. They appear here as the site team logs them.</div>`;
+  $("#cBody").innerHTML=`
+    <div class="dethead">
+      <div><div class="eyebrow">${esc(v.kind)}</div><div class="name">${esc(v.name)}</div><div class="sub">${esc(v.venue)}</div></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill blue"><i></i>${esc(v.phases[v.phase]?v.phases[v.phase].name:"")}</span><span class="pill grey">Opens ${fmtD(v.open)}</span></div>
+    </div>
+    <div class="stepper">${steps}</div>
+    <div class="cgrid">
+      <div class="panel"><div class="hd"><h3>Waiting on you</h3><span class="pill grey">${v.approvals.length}</span></div><div class="bd list">${waiting}</div></div>
+      <div class="panel"><div class="hd"><h3>Milestones</h3></div><div class="bd list">${miles}</div></div>
+    </div>
+    <div class="panel" style="margin-top:14px"><div class="hd"><h3>Updates</h3><span class="pill grey">${v.updates.length}</span></div><div class="bd"><div class="thread">${updates}</div><p class="sub" style="font-size:12.5px;margin:12px 0 0">To reply, message ${esc(v.pm)}${v.sales?" or "+esc(v.sales):""}. Their replies appear here.</p></div></div>
+    <div class="panel" style="margin-top:14px"><div class="hd"><h3>Site photos</h3><span class="pill grey">${v.photos.length}</span></div><div class="bd">${shots}</div></div>`;
+  $("#cFoot").innerHTML=`Updated ${fmtDL(v.updatedAt)} ${new Date(v.updatedAt).toTimeString().slice(0,5)}. This page updates on its own.<br>Concept prototype. SEMBA Malaysia Design &amp; Construction Sdn. Bhd.`;
+}
+async function load(){
+  try{const r=await fetch("/api/client/"+TOKEN,{cache:"no-store"});const j=await r.json();
+    if(!r.ok||!j.ok){$("#cBody").innerHTML=`<div class="panel"><div class="bd">${esc(j.error||"This link is not active.")} Ask your SEMBA project manager for a new one.</div></div>`;return}
+    const text=JSON.stringify(j.view);if(text!==last){last=text;render(j.view)}
+  }catch(e){if(!last)$("#cBody").innerHTML=`<div class="panel"><div class="bd">The project page did not load. Check the link and try again.</div></div>`}
+}
+load();setInterval(load,15000);
+</script>
+</body>
+</html>

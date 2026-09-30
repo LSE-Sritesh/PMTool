@@ -69,13 +69,13 @@ Run from the local server, the top right shows a save status ("Changes saved on 
 
 ### 4.2 Projects
 Card grid with filters (all, at risk, on site, design and submission, handed over). Click opens the detail. Detail has the phase stepper with planned dates, a risk banner, Milestones, Money (contract sum, committed, claimed, approved variations, uncommitted, with a bar), Team, then tabs. Updates is the single thread where PM, sales and client post, with a compose box that lets the demo post as any of the three. Variations is a priced table with a total. Snags can be marked fixed. Site log filters check-ins for this project. Approvals filters the queue for this project.
-"Share client view" is a toast only. The client view itself is not built (see section 7).
+"Share client view" makes a private link for the project and copies it. Once shared, the button reads Copy client link and an Open client view link sits beside it. Needs the local server (see 7.4).
 
 ### 4.3 Timeline
 Sixteen week Gantt starting the Monday four weeks before today. One row per project, a bar per phase, a blue line for the current week, month boundaries marked, a red outline on a phase that has run past its planned end while still current. Clicking a project name opens its detail.
 
 ### 4.4 Site team
-Who is where today (two coordinators, their check-ins and planned stops). A check-in form (coordinator, project, note, flag). Saving adds to the log, refreshes Today, and shows a toast. Photos are placeholders in the prototype.
+Who is where today (two coordinators, their check-ins and planned stops). A check-in form (coordinator, project, note, flag). Saving adds to the log, refreshes Today, and shows a toast. With the local server running the form takes photos, up to 8 per check-in, and shows them as thumbnails in the log (see 7.5). The sample check-ins still show placeholder boxes.
 
 ### 4.5 Approvals
 Queue sorted by days waiting. Filters for open, waiting on SEMBA, waiting on others, done. Chase shows a toast that says nothing was sent. Done marks the item and refreshes Today, including the claims overdue tile, which is summed from open progress claims.
@@ -153,8 +153,22 @@ Built 30 September 2026. How it works.
 ### 7.4 Client view
 A read-only page per project, reached by a link with a token, showing Updates, Approvals waiting on the client, milestones and photos. No money, no internal flags, no site notes. This is the feature SEMBA asked for in their own words ("one place for client, PM and salesperson"). It needs a decision on hosting because a client will not open `localhost`. Options, a tunnel (quick, insecure, demo only), a small VPS (real, needs Lemon Sky to run it, which is a solutions service conversation), or email digests generated from the tool (no hosting, no live view). Do not build this until the hosting question is answered.
 
+Built 30 September 2026 for the local prototype only, on Sritesh's decision that hosting is not a question yet. The page runs from the same local server and is opened on the same laptop to show SEMBA the idea.
+1. The link. Share client view on a project makes a random 16 character token, saves it with the other changes (`shares` in the saved data), and copies `http://localhost:3000/client/<token>`. The same project always gets the same link.
+2. What the client sees. `client.html`, served at `/client/<token>` with the tool's own stylesheet. Project name, kind, venue, phase stepper with planned dates, Waiting on you (open approvals that name the client), milestones (Done, Due, Overdue), the Updates thread, site photos, and who to contact. Nothing else.
+3. How it stays current. The tool builds a client safe copy of the project (`clientView()` in `index.html`) and sends it to `PUT /api/client/<token>` after every save and at boot. The server keeps it in `data/clientviews/<token>.json`. The client page reads `GET /api/client/<token>` every 15 seconds and redraws when something changed. Money, risk lines, site notes and flags are never in that copy, so they cannot leak even if the page were hosted later.
+4. Read only. The client cannot post or approve from the page yet. The page says who to message instead.
+5. Not done. Turning a link off. Client replies from the page. Hosting, still a decision for later.
+
 ### 7.5 Photos on check-ins
 Replace the photo count with real uploads through the server into `06 Site` of the client folder, named `YYYY-MM-DD HHMM <coordinator> <n>.jpg`. Show thumbnails in the log.
+
+Built 30 September 2026.
+1. The form. A Photos field on the check-in form, off until the local server is found. Takes up to 8 pictures from the camera or gallery.
+2. Size. Each photo is shrunk in the browser to 1600 pixels on the long side and saved as JPEG at 85 percent, so a phone photo of several MB becomes a few hundred KB. Rotation from the phone is kept.
+3. Where. `POST /api/photos`, one photo per request as raw bytes. Saved into the client's `06 Site (photos, daily logs)` folder, or `Clients/Site photos/<project>/` for a sample project. Named with the date, time to the minute, coordinator and a number. JPEG, PNG and WebP are accepted, 15 MB limit.
+4. Showing them. `GET /api/photo?f=<path inside Clients>` serves a photo. Paths outside the clients folder are refused. Thumbnails appear in the site log and on the project's Site log tab, and open full size in a new tab. The client page shows the same photos.
+5. Saved with the check-in. The file paths are kept in the check-in record, so the thumbnails come back after a reload.
 
 ### 7.6 Assistant, live
 Only after 7.2. Replace the canned outputs with calls to a model, passing the project JSON as context, with the same four prompts as system templates. Needs an API key owner, a monthly cost cap, and a line in the UI saying what data leaves the machine. Keep "Sample output" labels until this is done.
@@ -173,11 +187,11 @@ Integrations with Google or Microsoft (suite unknown). WhatsApp (Meta business A
 
 ## 9. State of the build on 29 September 2026
 
-Built and working in `server.js`. Local server with folder creation on disk (7.1), saving to `data/state.json` (7.2) and quotation PDFs through Chrome or Edge (7.3).
+Built and working in `server.js`. Local server with folder creation on disk (7.1), saving to `data/state.json` (7.2), quotation PDFs through Chrome or Edge (7.3), the client page at `/client/<token>` (7.4) and site photos in the client folder (7.5).
 
 Built and working in `index.html`. Today, Projects with detail, Timeline, Site team with check-in form, Approvals with chase and done, Quotation with template, live totals, generate, copy and issue, New client with code, folder preview, commands and project creation, Assistant with four samples. Live date engine. Dark theme. Phone layout.
 
-Not built. Client view (7.4), photo upload (7.5), live model (7.6).
+Not built. Live model (7.6). Client replies from the client page. Hosting for the client page.
 
 Known rough edges. Weekday words in sample copy move with the date engine and are not always a Friday. The Gantt shows the current phase's red outline only, not earlier late phases. Opened without the server nothing is saved, so the quotation number, the client code and anything added reset on reload. Marking an approval done does not clear the matching risk line or status on the project. The header form on the quotation screen is 4 columns and drops to 2 under 900px.
 

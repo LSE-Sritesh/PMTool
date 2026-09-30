@@ -160,7 +160,8 @@ tr:last-child td{border-bottom:0}
 .stop .st{width:8px;height:8px;border-radius:50%;background:var(--line)}
 .stop .st.ok{background:var(--ok)}.stop .st.now{background:var(--blue);box-shadow:0 0 0 3px var(--bluewash)}
 .log{display:flex;flex-direction:column}
-.log .row .photos{display:flex;gap:4px;margin-top:6px}
+.log .row .photos{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.log .row .photos img{width:72px;height:54px;object-fit:cover;border-radius:4px;border:1px solid var(--line);display:block}
 .log .row .photos span{width:44px;height:34px;border-radius:4px;background:linear-gradient(135deg,var(--line),var(--bg));border:1px solid var(--line);display:grid;place-items:center;font-size:10px;color:var(--ink3)}
 .field{display:grid;gap:8px;grid-template-columns:1fr 1fr}
 .field .full{grid-column:1/-1}
@@ -268,7 +269,7 @@ tr:last-child td{border-bottom:0}
     <!-- SITE -->
     <section class="view" id="v-site">
       <div class="topbar">
-        <div><div class="eyebrow" data-today-long></div><h1 class="title">Site team</h1><div class="sub">Where the site coordinators are, what they saw, and what they flagged. Check-ins are logged from the phone, so the PM does not have to chase. Photo upload is not built yet.</div></div>
+        <div><div class="eyebrow" data-today-long></div><h1 class="title">Site team</h1><div class="sub">Where the site coordinators are, what they saw, and what they flagged. Check-ins are logged from the phone, with photos, so the PM does not have to chase.</div></div>
         <button class="btn primary" id="btnCheckin">+ Log a site check-in</button>
       </div>
       <div class="grid who" id="whoWhere"></div>
@@ -279,6 +280,7 @@ tr:last-child td{border-bottom:0}
           <div><label for="ciProj">Project</label><select id="ciProj"></select></div>
           <div class="full"><label for="ciNote">What did you see</label><textarea id="ciNote" rows="3" placeholder="Progress, trades on site, anything blocked" style="width:100%"></textarea></div>
           <div><label for="ciFlag">Flag for PM</label><select id="ciFlag"><option value="">No issue</option><option value="warn">Needs a decision</option><option value="bad">Blocking</option></select></div>
+          <div class="full"><label for="ciPhotos">Photos</label><input id="ciPhotos" type="file" accept="image/*" multiple disabled><div id="ciPhotoNote" style="font-size:12px;color:var(--ink3);margin-top:4px">Start the local server to attach photos.</div></div>
           <div style="align-self:end"><button class="btn primary" type="submit">Save check-in</button></div>
         </form></div>
       </div>
@@ -516,6 +518,7 @@ const daysBetween=(a,b)=>Math.round((new Date(b)-new Date(a))/86400000);
 const pillFor=st=>({ok:"ok",warn:"warn",bad:"bad",grey:"grey",blue:"blue"}[st]||"grey");
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const photoUrl=f=>"/api/photo?f="+encodeURIComponent(f);
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove("on"),2200)}
 function avatar(k){if(!k)return"";return `<span class="av ${TEAM[k].c}" title="${TEAM[k].n}, ${TEAM[k].r}">${ini(k)}</span>`}
 
@@ -591,7 +594,8 @@ function openProject(id){
       <div class="tabs" id="dtabs"><button class="tab" data-t="updates">Updates</button><button class="tab" data-t="vos">Variations (${p.vos.length})</button><button class="tab" data-t="snags">Snags (${p.snags.filter(s=>s[1]==="open").length} open)</button><button class="tab" data-t="site">Site log</button><button class="tab" data-t="appr">Approvals (${APPR.filter(a=>a.proj===p.id&&a.state==="open").length})</button></div>
       <div class="bd" id="dbody"></div>
     </div>`;
-  d.querySelector("#btnShare").onclick=()=>toast("Client view is not built yet. It will show updates, approvals and photos only.");
+  d.querySelector("#btnShare").onclick=()=>shareClient(p);
+  const sh=STATE.shares.find(x=>x.proj===p.id);if(sh){d.querySelector("#btnShare").textContent="Copy client link";d.querySelector("#btnShare").insertAdjacentHTML("afterend",`<a class="btn sm" style="text-decoration:none" href="/client/${esc(sh.token)}" target="_blank" rel="noopener">Open client view</a>`)}
   d.querySelector("#dtabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(b){detailTab=b.dataset.t;renderDetailTab(p)}});
   renderDetailTab(p);
 }
@@ -601,7 +605,7 @@ function renderDetailTab(p){
   if(detailTab==="updates"){
     b.innerHTML=`<div class="thread">${p.thread.map(([r,w,t,m])=>`<div class="msg ${r}"><span class="av ${r==="client"?"":r==="sales"?"b":""}" style="${r==="client"?"background:var(--bluewash);color:var(--blue2)":""}">${esc(w.split(" ").map(s=>s[0]).join("").slice(0,2))}</span><div class="bub"><div class="who">${esc(w)}<span>${r==="client"?"Client":r==="sales"?"Sales":"Project manager"} · ${esc(t)}</span></div><p>${esc(m)}</p></div></div>`).join("")||"<div class='sub'>No messages yet.</div>"}</div>
     <form class="compose" id="composeForm"><select id="composeAs"><option value="pm">As ${TEAM[p.pm].n} (PM)</option>${p.sales?`<option value="sales">As ${TEAM[p.sales].n} (Sales)</option>`:""}<option value="client">As client</option></select><input id="composeText" placeholder="Write an update everyone on this project can see"><button class="btn primary" type="submit">Post</button></form>`;
-    $("#composeForm").onsubmit=e=>{e.preventDefault();const v=$("#composeText").value.trim();if(!v)return;const as=$("#composeAs").value;const name=as==="pm"?TEAM[p.pm].n:as==="sales"?TEAM[p.sales].n:p.client.split(",")[0];p.thread.push([as,name,"Now",v]);keep("posts",{proj:p.id,role:as,name,at:new Date().toISOString(),text:v});renderDetailTab(p);toast("Posted to the project thread.")};
+    $("#composeForm").onsubmit=e=>{e.preventDefault();const v=$("#composeText").value.trim();if(!v)return;const as=$("#composeAs").value;const name=as==="pm"?TEAM[p.pm].n:as==="sales"?TEAM[p.sales].n:p.client.split(",")[0];p.thread.push([as,name,stamp(new Date()),v]);keep("posts",{proj:p.id,role:as,name,at:new Date().toISOString(),text:v});renderDetailTab(p);toast("Posted to the project thread.")};
   } else if(detailTab==="vos"){
     b.innerHTML=p.vos.length?`<div class="tw"><table><thead><tr><th>Ref</th><th>Description</th><th class="num">Amount</th><th>Status</th></tr></thead><tbody>${p.vos.map(([r,dsc,a,s])=>`<tr><td><b>${esc(r)}</b></td><td>${esc(dsc)}</td><td class="num">${fmtRM(+a)}</td><td><span class="pill ${s.startsWith("Await")?"warn":"ok"}">${esc(s)}</span></td></tr>`).join("")}<tr><td></td><td><b>Total variations</b></td><td class="num"><b>${fmtRM(p.vos.reduce((s,v)=>s+ +v[2],0))}</b></td><td></td></tr></tbody></table></div><p class="sub" style="font-size:12.5px;margin-top:10px">Every variation is priced and approved here before the site does the work. That is where fit-out margin usually leaks.</p>`:`<div class="sub">No variations yet. Priced changes appear here before the site does the work.</div>`;
   } else if(detailTab==="snags"){
@@ -639,7 +643,7 @@ function renderGantt(){
 }
 
 // ---------- site ----------
-function logRow(l){return `<div class="row"><span class="stripe ${l.flag||"ok"}"></span><div><div class="t">${TEAM[l.who].n} · ${esc(pj(l.proj).name)}<span style="font-weight:500;color:var(--ink3)"> · ${esc(pj(l.proj).venue)}</span></div><div class="m">${esc(l.note)}</div>${l.flagText?`<div class="m" style="color:${l.flag==="bad"?"var(--bad)":"var(--warnink)"};font-weight:700;margin-top:4px">${esc(l.flagText)}</div>`:""}<div class="photos">${Array.from({length:l.photos},(_,i)=>`<span>IMG ${i+1}</span>`).join("")}</div></div><div class="r">${l.day&&l.day!==dayKey(TODAY)?fmtD(l.day)+"<br>":""}${l.time}</div></div>`}
+function logRow(l){return `<div class="row"><span class="stripe ${l.flag||"ok"}"></span><div><div class="t">${TEAM[l.who].n} · ${esc(pj(l.proj).name)}<span style="font-weight:500;color:var(--ink3)"> · ${esc(pj(l.proj).venue)}</span></div><div class="m">${esc(l.note)}</div>${l.flagText?`<div class="m" style="color:${l.flag==="bad"?"var(--bad)":"var(--warnink)"};font-weight:700;margin-top:4px">${esc(l.flagText)}</div>`:""}<div class="photos">${l.files&&l.files.length?l.files.map(f=>`<a href="${photoUrl(f)}" target="_blank" rel="noopener"><img src="${photoUrl(f)}" alt="Site photo" loading="lazy"></a>`).join(""):Array.from({length:l.photos},(_,i)=>`<span>IMG ${i+1}</span>`).join("")}</div></div><div class="r">${l.day&&l.day!==dayKey(TODAY)?fmtD(l.day)+"<br>":""}${l.time}</div></div>`}
 function renderSite(){
   const people=["farah","kumar"];
   $("#whoWhere").innerHTML=people.map(k=>{
@@ -653,7 +657,18 @@ function renderSite(){
 $("#btnCheckin").onclick=()=>{$("#checkinForm").hidden=false;$("#ciNote").focus()};
 $("#btnCancelCheckin").onclick=()=>{$("#checkinForm").hidden=true};
 $("#ciProj").innerHTML=P.filter(p=>p.phase>=3).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
-$("#formCheckin").onsubmit=e=>{e.preventDefault();const who=$("#ciWho").value.toLowerCase();const note=$("#ciNote").value.trim();if(!note)return;const fl=$("#ciFlag").value;const now=new Date();const ci={who,proj:$("#ciProj").value,note,flag:fl,flagText:fl==="bad"?"Blocking. Flagged from site.":fl==="warn"?"Needs a decision. Flagged from site.":"",photos:0};LOG.push({...ci,time:now.toTimeString().slice(0,5),day:dayKey(now)});keep("checkins",{...ci,at:now.toISOString()});$("#ciNote").value="";$("#checkinForm").hidden=true;renderSite();renderOverview();toast("Check-in saved"+(fl?" and flagged on Today.":"."))};
+// photos are shrunk in the browser first, so a phone photo does not fill the client folder
+async function shrink(file){try{const bmp=await createImageBitmap(file,{imageOrientation:"from-image"});const s=Math.min(1,1600/Math.max(bmp.width,bmp.height));const c=document.createElement("canvas");c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);const b=await new Promise(r=>c.toBlob(r,"image/jpeg",.85));return b||file}catch(e){return file}}
+$("#formCheckin").onsubmit=async e=>{e.preventDefault();const who=$("#ciWho").value.toLowerCase();const note=$("#ciNote").value.trim();const p=pj($("#ciProj").value);if(!note||!p)return;const fl=$("#ciFlag").value;const now=new Date();
+  const ci={who,proj:p.id,note,flag:fl,flagText:fl==="bad"?"Blocking. Flagged from site.":fl==="warn"?"Needs a decision. Flagged from site.":"",photos:0,files:[]};
+  const picked=SERVER?[...$("#ciPhotos").files].slice(0,8):[];
+  if(picked.length){const btn=e.target.querySelector("[type=submit]");btn.disabled=true;
+    for(let i=0;i<picked.length;i++){toast("Saving photo "+(i+1)+" of "+picked.length);
+      try{const blob=await shrink(picked[i]);const r=await fetch("/api/photos?"+new URLSearchParams({code:p.code||"",title:p.name,who:TEAM[who].n,n:i+1,at:now.toISOString()}),{method:"POST",headers:{"Content-Type":blob.type||"image/jpeg"},body:blob});const j=await r.json();if(r.ok&&j.ok)ci.files.push(j.file);else toast(j.error||"A photo was not saved.")}
+      catch(x){toast("A photo was not saved. The local server did not answer.")}}
+    btn.disabled=false;ci.photos=ci.files.length}
+  LOG.push({...ci,time:now.toTimeString().slice(0,5),day:dayKey(now)});keep("checkins",{...ci,at:now.toISOString()});$("#ciNote").value="";$("#ciPhotos").value="";$("#checkinForm").hidden=true;renderSite();renderOverview();
+  toast("Check-in saved"+(ci.photos?" with "+ci.photos+" photo"+(ci.photos===1?"":"s"):"")+(fl?" and flagged on Today.":"."))};
 
 // ---------- approvals ----------
 let apprF="open";
@@ -755,7 +770,7 @@ $("#btnQuoteGen").onclick=()=>{
   </div></div>`;
   $("#btnQuoteCopy").onclick=()=>{const txt=$("#qPaper").innerText;navigator.clipboard?.writeText(txt).then(()=>toast("Quotation copied as text")).catch(()=>toast("Select the quotation and copy"))};
   $("#btnQuotePrint").onclick=()=>window.print();
-  $("#btnQuoteIssue").onclick=e=>{const p=pj($("#qProj").value);e.currentTarget.disabled=true;e.currentTarget.textContent="Issued";if(p){const at=new Date().toISOString(),said="Quotation "+qNumber()+" issued, "+fmtRM(t.total)+", valid "+$("#qValid").value+" days.";p.budget=Math.round(t.total);p.thread.push(["pm",TEAM[p.pm].n,"Now",said]);
+  $("#btnQuoteIssue").onclick=e=>{const p=pj($("#qProj").value);e.currentTarget.disabled=true;e.currentTarget.textContent="Issued";if(p){const at=new Date().toISOString(),said="Quotation "+qNumber()+" issued, "+fmtRM(t.total)+", valid "+$("#qValid").value+" days.";p.budget=Math.round(t.total);p.thread.push(["pm",TEAM[p.pm].n,stamp(at),said]);
     const quote={no:qNumber(),proj:p.id,at,total:p.budget,status:"Issued",by:$("#qBy").value,client:$("#qClient").value,attn:$("#qAttn").value,site:$("#qSite").value,area:$("#qArea").value,valid:$("#qValid").value,weeks:$("#qDur").value,contingency:$("#qCont").value,discount:$("#qDisc").value,serviceTax:$("#qSst").value,deposit:$("#qDep").value,lines:QL.map(r=>({...r}))};
     keep("quotes",quote);keep("posts",{proj:p.id,role:"pm",name:TEAM[p.pm].n,at,text:said});if(SERVER)qFilePdf(quote,p)}QSEQ++;renderQLines();renderQReg();renderOverview();toast("Filed to "+(p?p.name:"project")+" as contract sum. Next number ready.")};
   $("#qDoc").scrollIntoView({behavior:"smooth",block:"start"});
@@ -798,7 +813,7 @@ $("#cForm").onsubmit=async e=>{e.preventDefault();
     catch(x){fail="The local server did not answer."}
     btn.disabled=false}
   const hello="Client created. Code "+cCode()+(made?". Folder set created, brief and site survey next.":". Brief and site survey next.");
-  const proj={id,code:cCode(),name:brand,kind,venue:$("#cVenue").value,client:$("#cPic").value+", "+$("#cCompany").value,phase:0,status:"blue",statusText:"New",pm,sales,qs:"jun",site:"",design:"yuki",open,budget:0,committed:0,claimed:0,vo:0,plan:{Design:[shiftISO("2026-10-12"),shiftISO("2026-11-06")],Submission:[shiftISO("2026-11-09"),shiftISO("2026-12-04")],Construction:[shiftISO("2026-12-14"),shiftISO("2027-02-05")],Snagging:[shiftISO("2027-02-08"),shiftISO("2027-02-12")],Handover:[shiftISO("2027-02-15"),shiftISO("2027-02-19")],DLP:[shiftISO("2027-02-20"),shiftISO("2027-08-19")]},risk:"",milestones:[["Site survey",shiftISO("2026-10-05"),"due"],["Brief signed off",shiftISO("2026-10-09"),"due"]],vos:[],snags:[],thread:[["sales",TEAM[sales].n,"Now",hello]]};
+  const proj={id,code:cCode(),name:brand,kind,venue:$("#cVenue").value,client:$("#cPic").value+", "+$("#cCompany").value,phase:0,status:"blue",statusText:"New",pm,sales,qs:"jun",site:"",design:"yuki",open,budget:0,committed:0,claimed:0,vo:0,plan:{Design:[shiftISO("2026-10-12"),shiftISO("2026-11-06")],Submission:[shiftISO("2026-11-09"),shiftISO("2026-12-04")],Construction:[shiftISO("2026-12-14"),shiftISO("2027-02-05")],Snagging:[shiftISO("2027-02-08"),shiftISO("2027-02-12")],Handover:[shiftISO("2027-02-15"),shiftISO("2027-02-19")],DLP:[shiftISO("2027-02-20"),shiftISO("2027-08-19")]},risk:"",milestones:[["Site survey",shiftISO("2026-10-05"),"due"],["Brief signed off",shiftISO("2026-10-09"),"due"]],vos:[],snags:[],thread:[["sales",TEAM[sales].n,stamp(new Date()),hello]]};
   P.push(proj);keep("projects",{...proj,thread:[]});keep("posts",{proj:id,role:"sales",name:TEAM[sales].n,at:new Date().toISOString(),text:hello});
   const win=`mkdir "Clients\\${root}\\`+FOLDERS.join(`" "Clients\\${root}\\`)+`"`;
   const mac=`mkdir -p "Clients/${root}/"{"`+FOLDERS.join('","')+`"}`;
@@ -813,31 +828,53 @@ $("#cForm").onsubmit=async e=>{e.preventDefault();
 };
 
 // ---------- local server, optional (PRD 7.1) ----------
-function serverUI(){$("#cSubmit").textContent="Create client and folders";$("#cNote").innerHTML=`<b>Where the folders go.</b> This page is running from the local server, so the folders are created on this computer, inside the folder at the top of the tree. Open the page as a file and it gives you the command instead.`;cTree()}
+function serverUI(){$("#ciPhotos").disabled=false;$("#ciPhotoNote").textContent="From the phone camera or the gallery. Saved in the client's 06 Site folder.";$("#cSubmit").textContent="Create client and folders";$("#cNote").innerHTML=`<b>Where the folders go.</b> This page is running from the local server, so the folders are created on this computer, inside the folder at the top of the tree. Open the page as a file and it gives you the command instead.`;cTree()}
 async function serverCheck(){if(!/^https?:$/.test(location.protocol))return;try{const r=await fetch("/api/health");const j=await r.json();if(r.ok&&j.app==="sitebook"){SERVER=j;CSEQ=Math.max(CSEQ,j.nextSeq||0);serverUI();if(j.store)await loadState()}}catch(e){}}
 
 // ---------- saved changes, only with the local server (PRD 7.2) ----------
 // Sample data keeps shifting with the date engine. Only what the user adds is saved, with real dates.
-const noState=()=>({projects:[],posts:[],checkins:[],apprDone:[],snagsFixed:[],quotes:[]});
+const noState=()=>({projects:[],posts:[],checkins:[],apprDone:[],snagsFixed:[],quotes:[],shares:[]});
 let STATE=noState(),REV=0,STORE=false,SAVED=false,SAVEQ=Promise.resolve();
 const dayKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const todayLog=()=>LOG.filter(l=>!l.day||l.day===dayKey(TODAY));
 const stamp=at=>{const d=new Date(at);return(dayKey(d)===dayKey(TODAY)?"Today":d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}))+" "+d.toTimeString().slice(0,5)};
 function keep(k,v){STATE[k].push(v);if(STORE)saveState()}
 function saveMark(ok,msg){SAVED=ok;const m=$("#saveMark");m.hidden=false;m.className="pill "+(ok?"ok":"bad");m.innerHTML="<i></i>"+(ok?"Changes saved on this computer":"Not saved");if(!ok)toast(msg||"Could not save. The local server did not answer.")}
-function saveState(){SAVEQ=SAVEQ.then(async()=>{if(!STORE)return;try{const r=await fetch("/api/state",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({rev:REV,state:STATE})});const j=await r.json();if(r.ok&&j.ok){REV=j.rev;saveMark(true)}else{if(r.status===409)STORE=false;saveMark(false,(j.error||"Could not save.")+(r.status===409?" Reload this page to carry on.":""))}}catch(e){saveMark(false)}});return SAVEQ}
+function saveState(){SAVEQ=SAVEQ.then(async()=>{if(!STORE)return;try{const r=await fetch("/api/state",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({rev:REV,state:STATE})});const j=await r.json();if(r.ok&&j.ok){REV=j.rev;saveMark(true);pushClientViews()}else{if(r.status===409)STORE=false;saveMark(false,(j.error||"Could not save.")+(r.status===409?" Reload this page to carry on.":""))}}catch(e){saveMark(false)}});return SAVEQ}
 function applyState(s){
   STATE=Object.assign(noState(),s);const year=TODAY.getFullYear();
   STATE.projects.forEach(p=>{if(pj(p.id)||!p.id||!p.name||!p.plan||!TEAM[p.pm]||(p.sales&&!TEAM[p.sales]))return;P.push({...p,milestones:p.milestones||[],vos:p.vos||[],snags:p.snags||[],thread:[]});const m=/^SMB-(\d{4})-(\d+)$/.exec(p.code||"");if(m&&+m[1]===year)CSEQ=Math.max(CSEQ,+m[2]+1)});
   STATE.posts.forEach(m=>{const p=pj(m.proj);if(p)p.thread.push([m.role,String(m.name||""),stamp(m.at),String(m.text||"")])});
-  const old=[],now=[];STATE.checkins.forEach(c=>{if(!pj(c.proj)||!TEAM[c.who])return;const d=new Date(c.at);(dayKey(d)===dayKey(TODAY)?now:old).push({...c,note:String(c.note||""),photos:+c.photos||0,time:d.toTimeString().slice(0,5),day:dayKey(d)})});LOG=old.concat(LOG,now);
+  const old=[],now=[];STATE.checkins.forEach(c=>{if(!pj(c.proj)||!TEAM[c.who])return;const d=new Date(c.at);const files=Array.isArray(c.files)?c.files.map(String):[];(dayKey(d)===dayKey(TODAY)?now:old).push({...c,note:String(c.note||""),files,photos:files.length||+c.photos||0,time:d.toTimeString().slice(0,5),day:dayKey(d)})});LOG=old.concat(LOG,now);
   STATE.apprDone.forEach(id=>{const a=APPR.find(x=>x.id==id);if(a)a.state="done"});
   STATE.snagsFixed.forEach(f=>{const p=pj(f.proj),g=p&&p.snags.find(x=>x[0]===f.title);if(g)g[1]="closed"});
   STATE.quotes.forEach(q=>{const p=pj(q.proj);if(p)p.budget=+q.total||0;const m=/^SMQ-(\d{4})-(\d+)$/.exec(q.no||"");if(m&&+m[1]===year)QSEQ=Math.max(QSEQ,+m[2]+1)});
   renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();qFillProjects();renderQLines();renderQReg();cTree();
 }
-async function loadState(){try{const r=await fetch("/api/state");const j=await r.json();if(r.ok&&j.ok){REV=j.rev;STORE=true;applyState(j.state);saveMark(true);$("#btnClearSaved").hidden=false}else saveMark(false,j.error)}catch(e){saveMark(false)}}
+async function loadState(){try{const r=await fetch("/api/state");const j=await r.json();if(r.ok&&j.ok){REV=j.rev;STORE=true;applyState(j.state);saveMark(true);$("#btnClearSaved").hidden=false;pushClientViews()}else saveMark(false,j.error)}catch(e){saveMark(false)}}
 $("#btnClearSaved").onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="Click again to clear";b._x=setTimeout(()=>{delete b.dataset.sure;b.textContent="Clear saved changes"},4000);return}clearTimeout(b._x);STATE=noState();saveState().then(()=>{if(SAVED)location.reload()})};
+
+// ---------- client view, a read only page per project (PRD 7.4) ----------
+// The tool sends a client safe copy of the project to the server under a private token. Money, risk lines and site notes stay out.
+const newToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>"abcdefghijklmnopqrstuvwxyz0123456789"[b%36]).join("");
+function clientView(p){return{
+  name:p.name,kind:p.kind,venue:p.venue,client:p.client.split(",")[0],pm:TEAM[p.pm].n,sales:p.sales?TEAM[p.sales].n:"",open:p.open,phase:p.phase,
+  phases:PHASES.map((ph,i)=>({name:ph,plan:p.plan[ph]||null,state:i<p.phase?"done":i===p.phase?"now":""})),
+  milestones:p.milestones.map(([t,d,s])=>({title:t,date:d,state:s==="done"?"done":s==="late"?"late":"due"})),
+  approvals:APPR.filter(a=>a.proj===p.id&&a.state==="open"&&a.side==="theirs"&&/client/i.test(a.on)).map(a=>({item:a.item,type:a.type,days:a.days})),
+  updates:p.thread.map(([r,w,t,m])=>({role:r,name:w,time:t,text:m})),
+  photos:LOG.filter(l=>l.proj===p.id&&l.files&&l.files.length).flatMap(l=>l.files.map(f=>({file:f,day:l.day||dayKey(TODAY),time:l.time}))),
+  updatedAt:new Date().toISOString()}}
+async function pushClientView(s){const p=pj(s.proj);if(!p||!SERVER)return false;try{const r=await fetch("/api/client/"+s.token,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({proj:p.id,view:clientView(p)})});return r.ok}catch(e){return false}}
+function pushClientViews(){STATE.shares.forEach(pushClientView)}
+async function shareClient(p){
+  if(!SERVER){toast("Client links need the local server. Start it with start.bat.");return}
+  let s=STATE.shares.find(x=>x.proj===p.id);const fresh=!s;
+  if(fresh){s={proj:p.id,token:newToken(),at:new Date().toISOString()};keep("shares",s)}
+  if(!await pushClientView(s)){toast("The client view could not be saved.");return}
+  const link=location.origin+"/client/"+s.token;if(fresh)openProject(p.id);
+  try{await navigator.clipboard.writeText(link);toast("Client link copied. "+link)}catch(e){toast("Client link "+link)}
+}
 
 // ---------- boot ----------
 qLoadTemplate();qFillProjects();renderQReg();cTree();

@@ -9,7 +9,7 @@ A single-file project management prototype for SEMBA Malaysia, a fit-out firm in
 
 ## Start here
 1. Run `node server.js` and open `http://localhost:3000` (or open `index.html` as a file) and click through all eight tabs so you know what exists.
-2. PRD 7.1, 7.2 and 7.3 are built. `server.js` creates client folders on disk, saves what the user adds to `data/state.json`, and prints quotations to PDF through the Chrome or Edge already installed. No dependencies. Next is 7.4, the client view, which is blocked until the hosting question in the PRD is answered. 7.5, photos on check-ins, can go ahead.
+2. PRD 7.1 to 7.5 are built. `server.js` creates client folders on disk, saves what the user adds to `data/state.json`, prints quotations to PDF through the Chrome or Edge already installed, serves the client page (`client.html` at `/client/<token>`) and stores site photos. No dependencies. Left on the list, 7.6 (live model, needs a decision on cost and data), client replies from the client page, and hosting.
 3. Keep `index.html` working as a standalone file. The server adds capability, it must not become a requirement.
 
 ## Layout of index.html
@@ -29,6 +29,8 @@ Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme bl
 11. `Clients/` and `data/` are ignored by git because they can hold real client details. Keep it that way.
 12. Only what the user adds is saved, never the sample data. The lists are `STATE` in `index.html` and `STATE_KEYS` in `server.js`. A new kind of record goes in both, plus `applyState()`.
 13. Anything that changes data calls `keep()` so it is saved. Screens about today read `todayLog()`, not `LOG`, because `LOG` also holds saved check-ins from earlier days.
+14. The client page only ever sees what `clientView()` in `index.html` returns. Add a field there only if a client may see it. Money, risk lines, site notes and flags stay out.
+15. `client.html` has no stylesheet of its own beyond a few layout rules. The server pastes the main stylesheet in at `<!--STYLE-->`, so the tokens and dark theme carry over.
 
 ## Owner
 Sritesh Naidu, AI Lead, Lemon Sky Edge. He is the trainer selling SEMBA an AI course, this tool is the demo and the seed of a solutions engagement. When in doubt about scope, the question is "does this help him show capability without promising what Lemon Sky has not agreed to build".
