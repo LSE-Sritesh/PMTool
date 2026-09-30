@@ -3,25 +3,26 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
-  --navy:#172E58; --navy2:#0F2044; --bronze:#B29D72; --bronze2:#8C7A50;
-  --blue:#2F80ED; --blue2:#1E63C4; --bluewash:#EAF2FE;
+  /* brand colours from SEMBA's own images, 30 September 2026. Grey #C9CBCA, navy #172E58, taupe #B5A08D, letters #EFEFEF */
+  --navy:#172E58; --navy2:#0F2044; --bronze:#B5A08D; --bronze2:#7D6A57;
+  --blue:#172E58; --blue2:#0F2044; --bluewash:#E6E9F0;
   --ok:#1E9E5A; --okwash:#E6F6EC; --warn:#E39B0A; --warnwash:#FFF4DC; --bad:#D93A3A; --badwash:#FDE8E8;
-  --bg:#F5F6F9; --panel:#FFFFFF; --line:#E1E4EC; --ink:#172033; --ink2:#5B6577; --ink3:#8A93A5;
-  --rail:#172E58; --railtext:#C9D3E8; --railhover:rgba(255,255,255,.07); --railon:rgba(255,255,255,.12); --onfill:#FFFFFF;
-  --design:#5A78B8; --done:#172E58; --warnink:#9A6600; --sampleink:#6E4A00; --sampleline:#F1D48A;
+  --bg:#C9CBCA; --panel:#FFFFFF; --line:#D9DBDA; --ink:#172E58; --ink2:#4A5468; --ink3:#727B8D;
+  --rail:#172E58; --railtext:#C9CBCA; --railhover:rgba(255,255,255,.07); --railon:rgba(255,255,255,.12); --onfill:#EFEFEF;
+  --design:#8A9BBE; --snag:#4F6591; --done:#B5A08D; --warnink:#9A6600; --sampleink:#6E4A00; --sampleline:#F1D48A;
   --radius:10px; --shadow:0 1px 2px rgba(23,32,51,.06),0 4px 14px rgba(23,32,51,.05);
   --font:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --serif:"EB Garamond",Georgia,"Times New Roman",serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#0F1522; --panel:#171F2F; --line:#2A3446; --ink:#EEF1F7; --ink2:#AAB3C5; --ink3:#7C8699;
-  --bluewash:#1A2A44; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0B1327; --railtext:#A9B6D0;
-  --done:#5A78B8; --warnink:#F0BE55; --sampleink:#F5D486; --sampleline:#6E5518;
+  --bg:#0B1220; --panel:#141D33; --line:#2A3650; --ink:#EEF1F7; --ink2:#B4BCCB; --ink3:#8791A5;
+  --blue:#5B79B3; --blue2:#9DB1DC; --bluewash:#1E2B48; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0A1224; --railtext:#C9CBCA;
+  --design:#4F6591; --snag:#7A90BF; --done:#B5A08D; --bronze2:#C9B7A4; --warnink:#F0BE55; --sampleink:#F5D486; --sampleline:#6E5518;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3); color-scheme:dark; }}
 :root[data-theme="dark"]{
-  --bg:#0F1522; --panel:#171F2F; --line:#2A3446; --ink:#EEF1F7; --ink2:#AAB3C5; --ink3:#7C8699;
-  --bluewash:#1A2A44; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0B1327; --railtext:#A9B6D0;
-  --done:#5A78B8; --warnink:#F0BE55; --sampleink:#F5D486; --sampleline:#6E5518;
+  --bg:#0B1220; --panel:#141D33; --line:#2A3650; --ink:#EEF1F7; --ink2:#B4BCCB; --ink3:#8791A5;
+  --blue:#5B79B3; --blue2:#9DB1DC; --bluewash:#1E2B48; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0A1224; --railtext:#C9CBCA;
+  --design:#4F6591; --snag:#7A90BF; --done:#B5A08D; --bronze2:#C9B7A4; --warnink:#F0BE55; --sampleink:#F5D486; --sampleline:#6E5518;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3); color-scheme:dark; }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -31,8 +32,9 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .app{display:grid;grid-template-columns:232px 1fr;min-height:100%}
 /* rail */
 .rail{background:var(--rail);color:var(--railtext);padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:env(safe-area-inset-top,0px);height:100vh}
-.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;color:var(--onfill)}
-.brand .mark{width:34px;height:34px;border-radius:8px;background:var(--bronze);display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:20px;color:var(--navy2)}
+.brand{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:8px 8px 18px;color:var(--onfill)}
+.logo{display:block;height:24px;width:auto}
+.brand .logo{height:26px}
 .brand b{display:block;font-size:14.5px;line-height:1.2;letter-spacing:.02em;text-wrap:balance}
 .brand small{display:block;font-size:11px;color:var(--railtext);letter-spacing:.12em;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px}
@@ -42,6 +44,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .nav button.on{background:var(--railon);color:var(--onfill)}
 .nav button .n{margin-left:auto;background:var(--bronze);color:var(--navy2);font-size:11px;font-weight:800;padding:1px 7px;border-radius:99px}
 .nav button:focus-visible,.btn:focus-visible,.tab:focus-visible,.chip:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.nav button:focus-visible{outline-color:var(--bronze)}
 .railfoot{margin-top:auto;font-size:11.5px;color:var(--railtext);line-height:1.5;padding:10px 8px;border-top:1px solid var(--railon)}
 .railfoot b{color:var(--onfill)}
 /* main */
@@ -89,7 +92,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .card .foot b{color:var(--ink)}
 .avs{display:flex}
 .av{width:26px;height:26px;border-radius:50%;background:var(--navy);color:var(--onfill);font-size:10.5px;font-weight:800;display:grid;place-items:center;border:2px solid var(--panel);margin-left:-6px}
-.av:first-child{margin-left:0}.av.b{background:var(--bronze);color:var(--navy2)}.av.g{background:var(--ink3)}.av.bl{background:var(--blue)}
+.av:first-child{margin-left:0}.av.b{background:var(--bronze);color:var(--navy2)}.av.g{background:var(--ink3)}.av.bl{background:var(--snag)}
 /* buttons, tabs, chips */
 .btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
 .btn:hover{border-color:var(--blue);color:var(--blue2)}
@@ -143,10 +146,10 @@ tr:last-child td{border-bottom:0}
 .gg .lab{padding:10px 8px;border-bottom:1px solid var(--line);font-weight:700;display:flex;flex-direction:column;justify-content:center}
 .gg .lab small{font-weight:500;color:var(--ink3)}
 .gg .cell{border-bottom:1px solid var(--line);border-left:1px solid var(--line);position:relative;min-height:46px}
-.gg .cell.today{background:linear-gradient(90deg,transparent 48%,var(--blue) 48%,var(--blue) 52%,transparent 52%)}
+.gg .cell.today{background:linear-gradient(90deg,transparent 48%,var(--bronze2) 48%,var(--bronze2) 52%,transparent 52%)}
 .gg .cell.month{border-left:2px solid var(--ink3)}
 .gbar{position:absolute;top:12px;height:22px;border-radius:5px;font-size:11px;font-weight:700;color:var(--onfill);padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
-.gbar.design{background:var(--design)}.gbar.submit{background:var(--bronze);color:var(--navy2)}.gbar.build{background:var(--navy)}.gbar.snag{background:var(--blue)}.gbar.hand{background:var(--ok)}.gbar.dlp{background:var(--line);color:var(--ink2)}
+.gbar.design{background:var(--design)}.gbar.submit{background:var(--bronze);color:var(--navy2)}.gbar.build{background:var(--navy)}.gbar.snag{background:var(--snag)}.gbar.hand{background:var(--ok)}.gbar.dlp{background:var(--line);color:var(--ink2)}
 .gbar.late{box-shadow:inset 0 0 0 2px var(--bad)}
 /* site */
 .who{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
@@ -185,7 +188,7 @@ tr:last-child td{border-bottom:0}
 @media (max-width:900px){
   .app{grid-template-columns:1fr}
   .rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 16px;gap:8px}
-  .brand{padding:0 8px 0 0}
+  .brand{flex-direction:row;align-items:center;padding:0 8px 0 0}
   .nav{flex-direction:row;flex-wrap:wrap}
   .nav button{width:auto;padding:7px 9px;font-size:12.5px}
   .nav button span.tx{display:none}
@@ -199,7 +202,7 @@ tr:last-child td{border-bottom:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* print, the quotation document only, always on white (PRD 7.3) */
 @media print{
-  :root{--bg:#FFFFFF;--panel:#FFFFFF;--line:#E1E4EC;--ink:#172033;--ink2:#5B6577;--ink3:#8A93A5;--shadow:none;color-scheme:light}
+  :root{--bg:#FFFFFF;--panel:#FFFFFF;--line:#D9DBDA;--ink:#172E58;--ink2:#4A5468;--ink3:#727B8D;--shadow:none;color-scheme:light}
   @page{size:A4;margin:14mm}
   .app{display:block}.main{padding:0}
   .rail,.toast,.main>*:not(#v-quote),#v-quote>*:not(#qDoc),#qDoc .hd{display:none!important}
@@ -210,10 +213,11 @@ tr:last-child td{border-bottom:0}
 }
 </style>
 </head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="semba-logo" viewBox="48 42 252 58"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"><path d="M84 50H66A11 11 0 0 0 66 72H78A9.5 9.5 0 0 1 78 91H56"/><path d="M126 50H102V91H126M110 71H128"/><path d="M140 93L160 49L180 93M158 93L178 49L198 93"/><path d="M216 50V91M216 50H232A10.5 10.5 0 0 1 232 71H216M234 71A10 10 0 0 1 234 91H216"/><path d="M254 93L275 49L296 93M266 79H289"/></g></symbol></svg>
 
 <div class="app">
   <aside class="rail">
-    <div class="brand"><div class="mark">S</div><div><b>Project Management Tool</b><small>SEMBA Malaysia</small></div></div>
+    <div class="brand"><svg class="logo" viewBox="0 0 252 58" role="img" aria-label="SEMBA"><use href="#semba-logo"/></svg><div><b>Project Management Tool</b><small>SEMBA Malaysia</small></div></div>
     <nav class="nav" id="nav">
       <button data-v="overview" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg><span class="tx">Today</span></button>
       <button data-v="projects"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg><span class="tx">Projects</span><span class="n" id="nProj"></span></button>
@@ -261,7 +265,7 @@ tr:last-child td{border-bottom:0}
     <section class="view" id="v-timeline">
       <div class="topbar">
         <div><div class="eyebrow" id="ganttRange"></div><h1 class="title">Timeline</h1><div class="sub">Every project by phase. The blue line is today. A red outline means the phase has already run past its planned end.</div></div>
-        <div class="legend"><span><i style="background:var(--design)"></i>Design</span><span><i style="background:var(--bronze)"></i>Mall and Bomba submission</span><span><i style="background:var(--navy)"></i>Construction</span><span><i style="background:var(--blue)"></i>VM and snagging</span><span><i style="background:var(--ok)"></i>Handover</span><span><i style="background:var(--line)"></i>DLP</span></div>
+        <div class="legend"><span><i style="background:var(--design)"></i>Design</span><span><i style="background:var(--bronze)"></i>Mall and Bomba submission</span><span><i style="background:var(--navy)"></i>Construction</span><span><i style="background:var(--snag)"></i>VM and snagging</span><span><i style="background:var(--ok)"></i>Handover</span><span><i style="background:var(--line)"></i>DLP</span></div>
       </div>
       <div class="panel gantt"><div class="gg" id="gantt"></div></div>
     </section>
@@ -799,7 +803,7 @@ $("#btnQuoteGen").onclick=()=>{
   $("#qDoc").innerHTML=`<div class="panel"><div class="hd"><h3>Quotation ${qNumber()}</h3><div style="display:flex;gap:6px"><button class="btn sm" id="btnQuoteCopy">Copy as text</button><button class="btn sm" id="btnQuotePrint">Print or save as PDF</button><button class="btn sm primary" id="btnQuoteIssue">Issue and file to project</button></div></div>
   <div class="bd" id="qPaper" style="max-width:900px;margin:0 auto;font-size:13px">
     <div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:3px solid var(--navy);padding-bottom:14px">
-      <div><div style="font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:.06em;color:var(--navy)">SEMBA</div><div style="font-weight:700">${SEMBA.name}</div><div style="color:var(--ink2)">${SEMBA.addr}<br>Tel ${SEMBA.tel}</div></div>
+      <div><svg class="logo" viewBox="0 0 252 58" role="img" aria-label="SEMBA" style="height:30px;color:var(--navy);margin-bottom:8px"><use href="#semba-logo"/></svg><div style="font-weight:700">${SEMBA.name}</div><div style="color:var(--ink2)">${SEMBA.addr}<br>Tel ${SEMBA.tel}</div></div>
       <div style="text-align:right"><div class="eyebrow">Quotation</div><div style="font-size:18px;font-weight:800">${qNumber()}</div><div style="color:var(--ink2)">Date ${TODAY.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}<br>Valid until ${valid.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}<br>Prepared by ${$("#qBy").value}</div></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)">

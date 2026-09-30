@@ -173,6 +173,12 @@ function pageStyle() {
   return fonts + "\n" + style;
 }
 
+// The SEMBA wordmark lives once in index.html. Other pages get a copy so <use href="#semba-logo"> works there too.
+function pageLogo() {
+  const index = fs.readFileSync(path.join(APP_DIR, "index.html"), "utf8");
+  return (index.match(/<svg[^>]*aria-hidden="true"><symbol id="semba-logo"[\s\S]*?<\/svg>/) || [""])[0];
+}
+
 function sendHtml(res, status, html) {
   res.writeHead(status, {
     "Content-Type": "text/html; charset=utf-8",
@@ -340,7 +346,7 @@ function findBrowser(cfg) {
 // The quotation is wrapped in the page's own stylesheet so the PDF matches the screen
 function printPage(html) {
   const safe = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Quotation</title>${pageStyle()}</head><body><div id="qDoc"><div class="panel">${safe}</div></div></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Quotation</title>${pageStyle()}</head><body>${pageLogo()}<div id="qDoc"><div class="panel">${safe}</div></div></body></html>`;
 }
 
 // Edge's launcher returns before the file is written, so we watch the file rather than the exit code
@@ -456,7 +462,7 @@ function notActivePage() {
 function clientPage(cfg, token, res) {
   if (!TOKEN.test(token) || !fs.existsSync(viewFile(cfg, token))) return sendHtml(res, 404, notActivePage());
   const tpl = fs.readFileSync(path.join(APP_DIR, "client.html"), "utf8");
-  sendHtml(res, 200, tpl.replace("<!--STYLE-->", pageStyle()).replace(/<!--TOKEN-->/g, token));
+  sendHtml(res, 200, tpl.replace("<!--STYLE-->", pageStyle()).replace("<!--LOGO-->", pageLogo()).replace(/<!--TOKEN-->/g, token));
 }
 
 // ---------- site photos (PRD 7.5) ----------

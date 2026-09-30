@@ -31,7 +31,8 @@ Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme bl
 13. Anything that changes data calls `keep()` so it is saved. Screens about today read `todayLog()`, not `LOG`, because `LOG` also holds saved check-ins from earlier days.
 14. The client page only ever sees what `clientView()` in `index.html` returns. Add a field there only if a client may see it. Money, risk lines, site notes and flags stay out.
 15. `client.html` has no stylesheet of its own beyond a few layout rules. The server pastes the main stylesheet in at `<!--STYLE-->`, so the tokens and dark theme carry over.
-16. The assistant invents nothing. Every sentence it writes comes from a field in the data or a count of it. No cost estimates, no made up dates. If a rule cannot say something from the data, it says so.
+16. The SEMBA wordmark is one `<symbol id="semba-logo">` at the top of `index.html`. Use it with `<svg class="logo" viewBox="0 0 252 58"><use href="#semba-logo"/></svg>`. The symbol keeps its own drawing box, the outer box always starts at 0 0.. Never paste the paths a second time. The server copies the symbol into other pages with `pageLogo()`.
+17. The assistant invents nothing. Every sentence it writes comes from a field in the data or a count of it. No cost estimates, no made up dates. If a rule cannot say something from the data, it says so.
 
 ## Owner
 Sritesh Naidu, AI Lead, Lemon Sky Edge. He is the trainer selling SEMBA an AI course, this tool is the demo and the seed of a solutions engagement. When in doubt about scope, the question is "does this help him show capability without promising what Lemon Sky has not agreed to build".

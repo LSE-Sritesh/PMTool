@@ -10,7 +10,7 @@
 /* client view, a read only page per project (PRD 7.4). The server fills in the main stylesheet above. */
 .wrap{max-width:820px;margin:0 auto;padding:24px 16px 48px}
 .chead{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-.chead .mark{width:40px;height:40px;border-radius:9px;background:var(--bronze);display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:24px;color:var(--navy2);flex:none}
+.chead .logo{height:28px;color:var(--ink);flex:none}
 .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
 .shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
 .shots a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg)}
@@ -21,8 +21,9 @@
 </style>
 </head>
 <body>
+<!--LOGO-->
 <div class="wrap">
-  <div class="chead"><div class="mark">S</div><div><div class="eyebrow">SEMBA Malaysia · Project update</div><div id="cFor" class="sub" style="margin-top:0"></div></div></div>
+  <div class="chead"><svg class="logo" viewBox="0 0 252 58" role="img" aria-label="SEMBA"><use href="#semba-logo"/></svg><div><div class="eyebrow">SEMBA Malaysia · Project update</div><div id="cFor" class="sub" style="margin-top:0"></div></div></div>
   <div id="cBody"><div class="sub">Loading your project.</div></div>
   <div class="cfoot" id="cFoot"></div>
 </div>

@@ -97,10 +97,11 @@ Rewritten 30 September. Four tasks (weekly client update, delay impact chain, si
 
 ## 5. Design system
 
-Colours sampled from SEMBA's public website on 23 September 2026 then brightened at Sritesh's request.
-Navy `#172E58` (rail, headings, construction bars). Bronze `#B29D72` (brand mark, submission bars, sales avatars). Bright blue `#2F80ED` (actions, current phase, today line). Semantic, green `#1E9E5A`, amber `#E39B0A`, red `#D93A3A`. Ground `#F5F6F9`, panels white, line `#E1E4EC`, ink `#172033`.
+Colours were first sampled from SEMBA's public website on 23 September 2026. On 30 September Sritesh supplied two brand images (a grey and navy block, and the SEMBA wordmark on taupe) and the theme was reset to match them exactly.
+Brand colours. Grey `#C9CBCA` (page ground, rail text). Navy `#172E58` (rail, headings, text, actions, current phase, construction bars). Taupe `#B5A08D` (finished phases, submission bars, sales avatars) with a darker taupe `#7D6A57` for text and the today line. Off white `#EFEFEF` for text on navy. Bright blue is gone, every action is navy. Two extra blues stay for the timeline only, `#8A9BBE` design and `#4F6591` snagging, so the phases can be told apart. Semantic colours stay, green `#1E9E5A`, amber `#E39B0A`, red `#D93A3A`. Panels white, line `#D9DBDA`.
+Logo. The SEMBA wordmark is redrawn as a vector, traced from the brand image. Rounded S and B, an E and an A with a floating middle bar, and an M made of two overlapping peaks. It lives once in `index.html` as `<symbol id="semba-logo">` and is used on the rail, the quotation letterhead and the client page. The server copies the symbol into the client page and the PDF. It takes its colour from the text colour around it.
 Type. EB Garamond 500 and 600 for project names and page titles (SEMBA's own display face). Manrope for everything else. Tabular numerals on every number.
-Dark theme is defined through the same tokens. Keep it working when you add anything.
+Dark theme is defined through the same tokens, on a near navy ground with lighter navy for actions so they show on dark panels. Keep it working when you add anything.
 Supporting tokens added 29 September so that no component holds a literal colour. `--design` (design bars), `--done` (finished phases, lighter in dark), `--warnink` (amber text), `--sampleink` and `--sampleline` (sample data badge), `--onfill` (text on a filled colour), `--railhover` and `--railon` (rail states).
 Layout. 232px navy rail, content area, single column under 900px. Every list row uses a 4px status stripe. Pills carry status. One shadow, one radius, no gradients.
 
