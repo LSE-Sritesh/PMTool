@@ -9,7 +9,7 @@
   --ok:#1E9E5A; --okwash:#E6F6EC; --warn:#E39B0A; --warnwash:#FFF4DC; --bad:#D93A3A; --badwash:#FDE8E8;
   --bg:#C9CBCA; --panel:#FFFFFF; --line:#D9DBDA; --ink:#172E58; --ink2:#4A5468; --ink3:#727B8D;
   --rail:#172E58; --railtext:#C9CBCA; --railhover:rgba(255,255,255,.07); --railon:rgba(255,255,255,.12); --onfill:#EFEFEF;
-  --design:#8A9BBE; --snag:#4F6591; --done:#B5A08D; --warnink:#9A6600; --sampleink:#6E4A00; --sampleline:#F1D48A;
+  --design:#8A9BBE; --snag:#4F6591; --done:#B5A08D; --warnink:#9A6600;
   --radius:10px; --shadow:0 1px 2px rgba(23,32,51,.06),0 4px 14px rgba(23,32,51,.05);
   --font:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --serif:"EB Garamond",Georgia,"Times New Roman",serif;
   color-scheme:light;
@@ -18,7 +18,7 @@
 :root[data-theme="dark"]{
   --bg:#0B1220; --panel:#141D33; --line:#2A3650; --ink:#EEF1F7; --ink2:#B4BCCB; --ink3:#8791A5;
   --blue:#5B79B3; --blue2:#9DB1DC; --bluewash:#1E2B48; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0A1224; --railtext:#C9CBCA;
-  --design:#4F6591; --snag:#7A90BF; --done:#B5A08D; --bronze2:#C9B7A4; --warnink:#F0BE55; --sampleink:#F5D486; --sampleline:#6E5518;
+  --design:#4F6591; --snag:#7A90BF; --done:#B5A08D; --bronze2:#C9B7A4; --warnink:#F0BE55;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3); color-scheme:dark; }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -50,13 +50,12 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .title{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.1;color:var(--ink)}
 .title em{font-style:normal;color:var(--bronze2)}
 .sub{color:var(--ink2);margin-top:4px;max-width:62ch}
-.sample{display:inline-flex;align-items:center;gap:8px;background:var(--warnwash);color:var(--sampleink);border:1px solid var(--sampleline);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700}
 .view{display:none}.view.on{display:block}
 .grid{display:grid;gap:14px}
 .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);min-width:0;container-type:inline-size}
 .kpi .l{font-size:12px;color:var(--ink2);font-weight:600}
-.kpi .v{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .v{font-size:clamp(18px,16cqi,28px);font-weight:800;letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi .d{font-size:12px;color:var(--ink3);margin-top:2px}
 .kpi.warn .v{color:var(--warn)}.kpi.bad .v{color:var(--bad)}.kpi.ok .v{color:var(--ok)}.kpi.blue .v{color:var(--blue)}
 .two{grid-template-columns:1.4fr 1fr}
@@ -232,7 +231,7 @@ tr:last-child td{border-bottom:0}
     <section class="view on" id="v-overview">
       <div class="topbar">
         <div><div class="eyebrow">Today</div><h1 class="title" data-today-long></h1></div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill" id="saveMark" hidden></span><button class="btn sm ghost" id="btnClearSaved" hidden title="Removes the clients, posts, check-ins and quotations saved in this tool. Folders on disk are not touched.">Clear saved changes</button><span class="sample">&#9679; Sample data</span></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill" id="saveMark" hidden></span><button class="btn sm ghost" id="btnClearSaved" hidden title="Removes the clients, posts, check-ins and quotations saved in this tool. Folders on disk are not touched.">Clear saved changes</button></div>
       </div>
       <div class="grid kpis" id="kpis"></div>
       <div class="grid two" style="margin-top:14px">

@@ -65,7 +65,7 @@ Client (new). company, brand, pic, phone, email, type, area, venue, open, source
 ### 4.1 Today
 KPI tiles (live projects, at risk, approvals waiting, claims overdue, site check-ins today). Needs attention list built from every project's `risk` line plus every flagged site check-in, blocking items first. Site team right now. Live project cards.
 Header shows the real date. All sample dates shift with the real date (see section 6).
-Run from the local server, the top right shows a save status ("Changes saved on this computer" or "Not saved") and a Clear saved changes button (see section 7.2). Opened as a file, neither appears.
+The "Sample data" badge was removed on 30 September at Sritesh's request. The rail footer still says Concept prototype. Run from the local server, the top right shows a save status ("Changes saved on this computer" or "Not saved") and a Clear saved changes button (see section 7.2). Opened as a file, neither appears.
 
 ### 4.2 Projects
 Card grid with filters (all, at risk, on site, design and submission, handed over). Click opens the detail. Detail has the phase stepper with planned dates, a risk banner, Milestones, Money (contract sum, committed, claimed, approved variations, uncommitted, with a bar), Team, then tabs. Updates is the single thread where PM, sales and client post, with a compose box that lets the demo post as any of the three. Variations is a priced table with a total. Snags can be marked fixed. Site log filters check-ins for this project. Approvals filters the queue for this project.
@@ -102,7 +102,7 @@ Brand colours. Grey `#C9CBCA` (page ground, rail text). Navy `#172E58` (rail, he
 Logo. The SEMBA wordmark is redrawn as a vector, traced from the brand image. Rounded S and B, an E and an A with a floating middle bar, and an M made of two overlapping peaks. It lives once in `index.html` as `<symbol id="semba-logo">` and is used on the rail, the quotation letterhead and the client page. The server copies the symbol into the client page and the PDF. It takes its colour from the text colour around it.
 Type. EB Garamond 500 and 600 for project names and page titles (SEMBA's own display face). Manrope for everything else. Tabular numerals on every number.
 Dark theme is defined through the same tokens, on a near navy ground with lighter navy for actions so they show on dark panels. Since 30 September it no longer follows the computer's light or dark setting, because on a dark mode laptop the brand colours never showed. Everyone sees the brand theme. Dark is opt in, by setting `data-theme="dark"` on the `html` element. Keep it working when you add anything.
-Supporting tokens added 29 September so that no component holds a literal colour. `--design` (design bars), `--done` (finished phases, lighter in dark), `--warnink` (amber text), `--sampleink` and `--sampleline` (sample data badge), `--onfill` (text on a filled colour), `--railhover` and `--railon` (rail states).
+Supporting tokens added 29 September so that no component holds a literal colour. `--design` (design bars), `--done` (finished phases, lighter in dark), `--warnink` (amber text), `--onfill` (text on a filled colour), `--railhover` and `--railon` (rail states).
 Layout. 232px navy rail, content area, single column under 900px. Every list row uses a 4px status stripe. Pills carry status. One shadow, one radius, no gradients.
 
 ## 6. Date engine
