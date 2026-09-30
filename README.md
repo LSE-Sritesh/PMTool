@@ -9,4 +9,6 @@ Project management prototype for SEMBA Malaysia. Single file, no build. Called S
 
 Client folders are written to `Clients` beside the app. Change `clientsRoot` in `sitebook.config.json` to point somewhere else.
 
+Quotations. Press Issue and file to project and a PDF is saved in the client's `03 Quotation and BOQ` folder (or in `Clients/Quotations` for a sample project). This uses the Chrome or Edge already on the computer. Print or save as PDF works without the server.
+
 Changes are saved to `data/state.json`. The sample projects are not saved, they stay in `index.html`. To reset before a demo, use Clear saved changes on the Today screen. Folders on disk are not touched by that.

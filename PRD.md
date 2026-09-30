@@ -82,6 +82,7 @@ Queue sorted by days waiting. Filters for open, waiting on SEMBA, waiting on oth
 
 ### 4.6 Quotation (added 29 September)
 Standard template for every job. Header (project picker that pre-fills client, attention, site and area, prepared by, validity, construction period, contingency, discount, service tax rate, deposit). Line items table with 14 standard sections and 19 template lines, editable inline, add and remove lines. Live totals. Generate renders the quotation document with SEMBA letterhead (address and phone from the public website), numbered lines grouped by section with section totals, material and labour columns, totals block, six standard terms, and two signature blocks. Copy as text works. Issue and file writes the total into the project's contract sum, posts a line in the project thread and advances the quotation number.
+Added 30 September. A Print or save as PDF button prints only the quotation, on white, A4. With the local server running, Issue and file also saves a PDF copy on disk (see 7.3). An Issued quotations list under the document shows number, project, date, total, status and the PDF file name, with buttons to mark a quotation accepted or declined.
 
 Tax logic. Service tax is applied to the labour and services subtotal (plus the labour share of contingency), not to materials. This follows Service Tax Policy 7/2025 which brought construction work services into scope at 6 percent from 1 July 2025, with the material portion outside scope when itemised separately. Sources, Ministry of Finance press release on the 1 July 2025 expansion, and KTP's 28 October 2025 summary of Policy 7/2025. Registration threshold and any exemptions for specific building types were not verified. Get SEMBA's finance or tax agent to confirm the rate and treatment before a real quotation goes out. The rate is a field, not a constant, for this reason.
 
@@ -142,6 +143,13 @@ Built 29 September 2026, in `server.js` (`GET` and `PUT /api/state`) and the sav
 ### 7.3 Quotation export
 `window.print()` is blocked in the artifact viewer but works from `localhost`. Add a print stylesheet that hides the rail, the header form and the line editor, and prints only `#qPaper` on A4 with page breaks avoided inside section groups. Save a PDF copy into `03 Quotation and BOQ` of the client folder through the server. Then add a quotation register (number, project, date, total, status) so the number sequence survives reloads.
 
+Built 30 September 2026. How it works.
+1. Print. A print stylesheet in `index.html` hides everything but the quotation and forces the light colours. Each section of the table is its own group, so a section is not split across pages.
+2. PDF on disk. The server has no add-ons, so it uses the Chrome or Edge already on the computer to print the page with no window showing. `POST /api/quotes/pdf` takes the quotation's HTML, wraps it in the page's own stylesheet, and prints it to A4. Chrome is tried first, then Edge. A different browser can be set with `"browser"` in `sitebook.config.json`. If neither is found the tool says so and the Print button still works.
+3. Where the file goes. `Clients/<code> <brand>/03 Quotation and BOQ/<number> <brand>.pdf` when the client has a folder. Sample projects have no folder, so their PDFs go to `Clients/Quotations/`. A name that already exists gets (2), (3) and so on.
+4. Register. Issued quotations are saved with the other changes (7.2), so the number sequence, the totals and the PDF paths survive a reload. Status starts at Issued and can be set to Accepted or Declined.
+5. Not done. Marking a quotation accepted changes nothing else yet. The PDF is made after Issue and file, so a quotation printed before issuing is not on disk.
+
 ### 7.4 Client view
 A read-only page per project, reached by a link with a token, showing Updates, Approvals waiting on the client, milestones and photos. No money, no internal flags, no site notes. This is the feature SEMBA asked for in their own words ("one place for client, PM and salesperson"). It needs a decision on hosting because a client will not open `localhost`. Options, a tunnel (quick, insecure, demo only), a small VPS (real, needs Lemon Sky to run it, which is a solutions service conversation), or email digests generated from the tool (no hosting, no live view). Do not build this until the hosting question is answered.
 
@@ -165,11 +173,11 @@ Integrations with Google or Microsoft (suite unknown). WhatsApp (Meta business A
 
 ## 9. State of the build on 29 September 2026
 
-Built and working in `server.js`. Local server with folder creation on disk (7.1) and saving to `data/state.json` (7.2).
+Built and working in `server.js`. Local server with folder creation on disk (7.1), saving to `data/state.json` (7.2) and quotation PDFs through Chrome or Edge (7.3).
 
 Built and working in `index.html`. Today, Projects with detail, Timeline, Site team with check-in form, Approvals with chase and done, Quotation with template, live totals, generate, copy and issue, New client with code, folder preview, commands and project creation, Assistant with four samples. Live date engine. Dark theme. Phone layout.
 
-Not built. Print and PDF (7.3), client view (7.4), photo upload (7.5), live model (7.6).
+Not built. Client view (7.4), photo upload (7.5), live model (7.6).
 
 Known rough edges. Weekday words in sample copy move with the date engine and are not always a Friday. The Gantt shows the current phase's red outline only, not earlier late phases. Opened without the server nothing is saved, so the quotation number, the client code and anything added reset on reload. Marking an approval done does not clear the matching risk line or status on the project. The header form on the quotation screen is 4 columns and drops to 2 under 900px.
 

@@ -9,7 +9,7 @@ A single-file project management prototype for SEMBA Malaysia, a fit-out firm in
 
 ## Start here
 1. Run `node server.js` and open `http://localhost:3000` (or open `index.html` as a file) and click through all eight tabs so you know what exists.
-2. PRD 7.1 and 7.2 are built. `server.js` creates client folders on disk and saves what the user adds to `data/state.json`, with no dependencies. Next job is 7.3, quotation export.
+2. PRD 7.1, 7.2 and 7.3 are built. `server.js` creates client folders on disk, saves what the user adds to `data/state.json`, and prints quotations to PDF through the Chrome or Edge already installed. No dependencies. Next is 7.4, the client view, which is blocked until the hosting question in the PRD is answered. 7.5, photos on check-ins, can go ahead.
 3. Keep `index.html` working as a standalone file. The server adds capability, it must not become a requirement.
 
 ## Layout of index.html

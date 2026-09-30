@@ -196,6 +196,17 @@ tr:last-child td{border-bottom:0}
   .title{font-size:24px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* print, the quotation document only, always on white (PRD 7.3) */
+@media print{
+  :root{--bg:#FFFFFF;--panel:#FFFFFF;--line:#E1E4EC;--ink:#172033;--ink2:#5B6577;--ink3:#8A93A5;--shadow:none;color-scheme:light}
+  @page{size:A4;margin:14mm}
+  .app{display:block}.main{padding:0}
+  .rail,.toast,.main>*:not(#v-quote),#v-quote>*:not(#qDoc),#qDoc .hd{display:none!important}
+  #v-quote,#qDoc{display:block!important}
+  #qDoc{margin:0!important}#qDoc .panel{border:0;box-shadow:none;border-radius:0}
+  #qPaper{max-width:none!important;padding:0!important;font-size:12px}
+  #qPaper tbody,#qPaper tr{break-inside:avoid}
+}
 </style>
 </head><body>
 
@@ -308,6 +319,9 @@ tr:last-child td{border-bottom:0}
         <div class="bd" style="display:flex;justify-content:flex-end;gap:24px;font-variant-numeric:tabular-nums;flex-wrap:wrap" id="qLive"></div>
       </div>
       <div id="qDoc" hidden style="margin-top:14px"></div>
+      <div class="panel" style="margin-top:14px" id="qReg"><div class="hd"><h3>Issued quotations</h3><span class="pill grey" id="qRegCount"></span></div>
+        <div class="tw"><table><thead><tr><th>No</th><th>Project</th><th>Date</th><th class="num">Total</th><th>Status</th><th>PDF</th><th></th></tr></thead><tbody id="qRegBody"></tbody></table></div>
+      </div>
     </section>
 
     <!-- NEW CLIENT -->
@@ -711,9 +725,9 @@ $("#btnQuoteGen").onclick=()=>{
   const t=qTotals();const valid=rel(+$("#qValid").value||30);const dep=+$("#qDep").value||0;
   const groups={};QL.forEach(r=>{(groups[r.s]=groups[r.s]||[]).push(r)});
   let n=0;
-  const body=QSECTIONS.filter(s=>groups[s]).map(s=>`<tr><td colspan="6" style="background:var(--bg);font-weight:800;padding:8px 10px">${s}</td></tr>`+groups[s].map(r=>`<tr><td style="color:var(--ink3)">${++n}</td><td>${esc(r.d)}</td><td class="num">${r.q}</td><td>${esc(r.u)}</td><td class="num">${fmtRM(r.q*r.m)}</td><td class="num">${fmtRM(r.q*r.l)}</td></tr>`).join("")+`<tr><td></td><td style="font-weight:700">Section total</td><td></td><td></td><td class="num" style="font-weight:700">${fmtRM(groups[s].reduce((a,r)=>a+r.q*r.m,0))}</td><td class="num" style="font-weight:700">${fmtRM(groups[s].reduce((a,r)=>a+r.q*r.l,0))}</td></tr>`).join("");
+  const body=QSECTIONS.filter(s=>groups[s]).map(s=>`<tbody><tr><td colspan="6" style="background:var(--bg);font-weight:800;padding:8px 10px">${s}</td></tr>`+groups[s].map(r=>`<tr><td style="color:var(--ink3)">${++n}</td><td>${esc(r.d)}</td><td class="num">${r.q}</td><td>${esc(r.u)}</td><td class="num">${fmtRM(r.q*r.m)}</td><td class="num">${fmtRM(r.q*r.l)}</td></tr>`).join("")+`<tr><td></td><td style="font-weight:700">Section total</td><td></td><td></td><td class="num" style="font-weight:700">${fmtRM(groups[s].reduce((a,r)=>a+r.q*r.m,0))}</td><td class="num" style="font-weight:700">${fmtRM(groups[s].reduce((a,r)=>a+r.q*r.l,0))}</td></tr></tbody>`).join("");
   $("#qDoc").hidden=false;
-  $("#qDoc").innerHTML=`<div class="panel"><div class="hd"><h3>Quotation ${qNumber()}</h3><div style="display:flex;gap:6px"><button class="btn sm" id="btnQuoteCopy">Copy as text</button><button class="btn sm primary" id="btnQuoteIssue">Issue and file to project</button></div></div>
+  $("#qDoc").innerHTML=`<div class="panel"><div class="hd"><h3>Quotation ${qNumber()}</h3><div style="display:flex;gap:6px"><button class="btn sm" id="btnQuoteCopy">Copy as text</button><button class="btn sm" id="btnQuotePrint">Print or save as PDF</button><button class="btn sm primary" id="btnQuoteIssue">Issue and file to project</button></div></div>
   <div class="bd" id="qPaper" style="max-width:900px;margin:0 auto;font-size:13px">
     <div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:3px solid var(--navy);padding-bottom:14px">
       <div><div style="font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:.06em;color:var(--navy)">SEMBA</div><div style="font-weight:700">${SEMBA.name}</div><div style="color:var(--ink2)">${SEMBA.addr}<br>Tel ${SEMBA.tel}</div></div>
@@ -723,7 +737,7 @@ $("#btnQuoteGen").onclick=()=>{
       <div><div class="eyebrow">To</div><b>${esc($("#qClient").value||"(client)")}</b><br>Attn ${esc($("#qAttn").value)}</div>
       <div><div class="eyebrow">Project</div><b>Interior fit-out works, ${esc($("#qSite").value||"(site)")}</b><br>${$("#qArea").value?$("#qArea").value+" sq ft · ":""}Construction period ${$("#qDur").value} weeks from site possession</div>
     </div>
-    <div class="tw" style="margin-top:12px"><table><thead><tr><th>No</th><th>Description of works</th><th class="num">Qty</th><th>Unit</th><th class="num">Material RM</th><th class="num">Labour RM</th></tr></thead><tbody>${body}</tbody></table></div>
+    <div class="tw" style="margin-top:12px"><table><thead><tr><th>No</th><th>Description of works</th><th class="num">Qty</th><th>Unit</th><th class="num">Material RM</th><th class="num">Labour RM</th></tr></thead>${body}</table></div>
     <div style="display:flex;justify-content:flex-end;margin-top:14px"><dl class="kv" style="min-width:340px">
       <dt>Material subtotal</dt><dd>${fmtRM(t.mat)}</dd><dt>Labour subtotal</dt><dd>${fmtRM(t.lab)}</dd><dt>Works subtotal</dt><dd>${fmtRM(t.sub)}</dd>
       <dt>Contingency ${$("#qCont").value} percent</dt><dd>${fmtRM(t.cont)}</dd>${t.disc?`<dt>Discount</dt><dd>(${fmtRM(t.disc)})</dd>`:""}
@@ -740,11 +754,27 @@ $("#btnQuoteGen").onclick=()=>{
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px"><div style="border-top:1px solid var(--ink2);padding-top:6px">For ${SEMBA.name}<br><span style="color:var(--ink3)">Name, date</span></div><div style="border-top:1px solid var(--ink2);padding-top:6px">Accepted for ${esc($("#qClient").value||"client")}<br><span style="color:var(--ink3)">Name, designation, company stamp, date</span></div></div>
   </div></div>`;
   $("#btnQuoteCopy").onclick=()=>{const txt=$("#qPaper").innerText;navigator.clipboard?.writeText(txt).then(()=>toast("Quotation copied as text")).catch(()=>toast("Select the quotation and copy"))};
-  $("#btnQuoteIssue").onclick=()=>{const p=pj($("#qProj").value);if(p){const at=new Date().toISOString(),said="Quotation "+qNumber()+" issued, "+fmtRM(t.total)+", valid "+$("#qValid").value+" days.";p.budget=Math.round(t.total);p.thread.push(["pm",TEAM[p.pm].n,"Now",said]);
-    keep("quotes",{no:qNumber(),proj:p.id,at,total:p.budget,by:$("#qBy").value,client:$("#qClient").value,attn:$("#qAttn").value,site:$("#qSite").value,area:$("#qArea").value,valid:$("#qValid").value,weeks:$("#qDur").value,contingency:$("#qCont").value,discount:$("#qDisc").value,serviceTax:$("#qSst").value,deposit:$("#qDep").value,lines:QL.map(r=>({...r}))});
-    keep("posts",{proj:p.id,role:"pm",name:TEAM[p.pm].n,at,text:said})}QSEQ++;renderQLines();renderOverview();toast("Filed to "+(p?p.name:"project")+" as contract sum. Next number ready.")};
+  $("#btnQuotePrint").onclick=()=>window.print();
+  $("#btnQuoteIssue").onclick=e=>{const p=pj($("#qProj").value);e.currentTarget.disabled=true;e.currentTarget.textContent="Issued";if(p){const at=new Date().toISOString(),said="Quotation "+qNumber()+" issued, "+fmtRM(t.total)+", valid "+$("#qValid").value+" days.";p.budget=Math.round(t.total);p.thread.push(["pm",TEAM[p.pm].n,"Now",said]);
+    const quote={no:qNumber(),proj:p.id,at,total:p.budget,status:"Issued",by:$("#qBy").value,client:$("#qClient").value,attn:$("#qAttn").value,site:$("#qSite").value,area:$("#qArea").value,valid:$("#qValid").value,weeks:$("#qDur").value,contingency:$("#qCont").value,discount:$("#qDisc").value,serviceTax:$("#qSst").value,deposit:$("#qDep").value,lines:QL.map(r=>({...r}))};
+    keep("quotes",quote);keep("posts",{proj:p.id,role:"pm",name:TEAM[p.pm].n,at,text:said});if(SERVER)qFilePdf(quote,p)}QSEQ++;renderQLines();renderQReg();renderOverview();toast("Filed to "+(p?p.name:"project")+" as contract sum. Next number ready.")};
   $("#qDoc").scrollIntoView({behavior:"smooth",block:"start"});
 };
+
+// the server prints the quotation to a PDF in the client's 03 folder, or in Clients/Quotations for a sample project
+async function qFilePdf(q,p){
+  try{const r=await fetch("/api/quotes/pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({no:q.no,code:p.code||"",title:p.name,html:$("#qPaper").outerHTML})});const j=await r.json();
+    if(r.ok&&j.ok){q.pdf=j.pdf;delete q.pdfError;toast("PDF saved in "+j.where)}else{q.pdfError=j.error||"The PDF was not made.";toast(q.pdfError)}}
+  catch(x){q.pdfError="The local server did not answer, so the PDF was not made.";toast(q.pdfError)}
+  if(STORE)saveState();renderQReg();
+}
+function renderQReg(){
+  const list=STATE.quotes.slice().reverse();
+  $("#qRegCount").textContent=list.length?list.length+" issued":"None yet";
+  $("#qRegBody").innerHTML=list.map(q=>{const p=pj(q.proj),st=q.status||"Issued",file=q.pdf?q.pdf.split(/[\\/]/).pop():"";
+    return `<tr><td><b>${esc(q.no)}</b></td><td>${p?`<a href="#" data-open="${p.id}" style="color:var(--blue2);font-weight:700;text-decoration:none">${esc(p.name)}</a>`:"(project removed)"}</td><td>${fmtD(q.at)}</td><td class="num"><b>${fmtRM(+q.total||0)}</b></td><td><span class="pill ${st==="Accepted"?"ok":st==="Declined"?"grey":"blue"}">${esc(st)}</span></td><td style="max-width:30ch;font-size:12px;color:var(--ink2)">${file?`<span title="${esc(q.pdf)}">${esc(file)}</span>`:`<span class="pill ${q.pdfError?"bad":"grey"}" title="${esc(q.pdfError||"Start the local server to save PDFs.")}">Not saved</span>`}</td><td>${st==="Issued"?`<div style="display:flex;gap:4px"><button class="btn sm" data-qstatus="Accepted" data-no="${esc(q.no)}">Accepted</button><button class="btn sm ghost" data-qstatus="Declined" data-no="${esc(q.no)}">Declined</button></div>`:""}</td></tr>`}).join("")||`<tr><td colspan="7" class="sub">Nothing issued yet. Generate a quotation above, then press Issue and file to project.</td></tr>`;
+}
+$("#qReg").addEventListener("click",e=>{const b=e.target.closest("[data-qstatus]");if(!b)return;const q=STATE.quotes.find(x=>x.no===b.dataset.no);if(!q)return;q.status=b.dataset.qstatus;if(STORE)saveState();renderQReg();toast("Quotation "+q.no+" marked "+q.status.toLowerCase()+".")});
 
 // ---------- new client ----------
 let CSEQ=7;let SERVER=null;
@@ -793,7 +823,7 @@ let STATE=noState(),REV=0,STORE=false,SAVED=false,SAVEQ=Promise.resolve();
 const dayKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const todayLog=()=>LOG.filter(l=>!l.day||l.day===dayKey(TODAY));
 const stamp=at=>{const d=new Date(at);return(dayKey(d)===dayKey(TODAY)?"Today":d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}))+" "+d.toTimeString().slice(0,5)};
-function keep(k,v){if(!STORE)return;STATE[k].push(v);saveState()}
+function keep(k,v){STATE[k].push(v);if(STORE)saveState()}
 function saveMark(ok,msg){SAVED=ok;const m=$("#saveMark");m.hidden=false;m.className="pill "+(ok?"ok":"bad");m.innerHTML="<i></i>"+(ok?"Changes saved on this computer":"Not saved");if(!ok)toast(msg||"Could not save. The local server did not answer.")}
 function saveState(){SAVEQ=SAVEQ.then(async()=>{if(!STORE)return;try{const r=await fetch("/api/state",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({rev:REV,state:STATE})});const j=await r.json();if(r.ok&&j.ok){REV=j.rev;saveMark(true)}else{if(r.status===409)STORE=false;saveMark(false,(j.error||"Could not save.")+(r.status===409?" Reload this page to carry on.":""))}}catch(e){saveMark(false)}});return SAVEQ}
 function applyState(s){
@@ -804,13 +834,13 @@ function applyState(s){
   STATE.apprDone.forEach(id=>{const a=APPR.find(x=>x.id==id);if(a)a.state="done"});
   STATE.snagsFixed.forEach(f=>{const p=pj(f.proj),g=p&&p.snags.find(x=>x[0]===f.title);if(g)g[1]="closed"});
   STATE.quotes.forEach(q=>{const p=pj(q.proj);if(p)p.budget=+q.total||0;const m=/^SMQ-(\d{4})-(\d+)$/.exec(q.no||"");if(m&&+m[1]===year)QSEQ=Math.max(QSEQ,+m[2]+1)});
-  renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();qFillProjects();renderQLines();cTree();
+  renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();qFillProjects();renderQLines();renderQReg();cTree();
 }
 async function loadState(){try{const r=await fetch("/api/state");const j=await r.json();if(r.ok&&j.ok){REV=j.rev;STORE=true;applyState(j.state);saveMark(true);$("#btnClearSaved").hidden=false}else saveMark(false,j.error)}catch(e){saveMark(false)}}
 $("#btnClearSaved").onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="Click again to clear";b._x=setTimeout(()=>{delete b.dataset.sure;b.textContent="Clear saved changes"},4000);return}clearTimeout(b._x);STATE=noState();saveState().then(()=>{if(SAVED)location.reload()})};
 
 // ---------- boot ----------
-qLoadTemplate();qFillProjects();cTree();
+qLoadTemplate();qFillProjects();renderQReg();cTree();
 renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();renderPrompts();serverCheck();
 if(location.hash){const h=location.hash.slice(1);if(["overview","projects","timeline","site","approvals","quote","client","assistant"].includes(h))go(h)}
 </script>

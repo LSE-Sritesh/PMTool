@@ -1,9 +1,11 @@
-// Project Management Tool, local server (PRD 7.1 and 7.2). No dependencies, run with "node server.js".
-// Serves index.html, creates the client folder set on disk, and saves what the user adds to data/state.json.
+// Project Management Tool, local server (PRD 7.1, 7.2 and 7.3). No dependencies, run with "node server.js".
+// Serves index.html, creates the client folder set on disk, saves what the user adds to data/state.json,
+// and prints issued quotations to PDF using the Chrome or Edge already on the computer.
 // Listens on this computer only. index.html still works on its own without it.
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const { spawn } = require("child_process");
 
 const APP_NAME = "Project Management Tool";
@@ -46,6 +48,7 @@ function loadConfig() {
     port,
     clientsRoot: path.resolve(APP_DIR, String(root)),
     dataDir: path.resolve(APP_DIR, String(data)),
+    browser: process.env.SITEBOOK_BROWSER || cfg.browser || "",
   };
 }
 
@@ -255,6 +258,127 @@ async function saveState(req, res, cfg) {
   send(res, 200, { ok: true, rev });
 }
 
+// ---------- quotation PDF (PRD 7.3) ----------
+
+// Chrome or Edge can print a page to PDF with no window. We use whichever is installed.
+function findBrowser(cfg) {
+  const c = [];
+  if (cfg.browser) c.push(cfg.browser);
+  if (process.platform === "win32") {
+    const pf = process.env.ProgramFiles || "C:\\Program Files";
+    const pf86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+    const local = process.env.LOCALAPPDATA || "";
+    c.push(
+      path.join(pf, "Google", "Chrome", "Application", "chrome.exe"),
+      path.join(pf86, "Google", "Chrome", "Application", "chrome.exe"),
+      path.join(local, "Google", "Chrome", "Application", "chrome.exe"),
+      path.join(pf86, "Microsoft", "Edge", "Application", "msedge.exe"),
+      path.join(pf, "Microsoft", "Edge", "Application", "msedge.exe")
+    );
+  } else if (process.platform === "darwin") {
+    c.push(
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+      "/Applications/Chromium.app/Contents/MacOS/Chromium"
+    );
+  } else {
+    c.push("/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/microsoft-edge");
+  }
+  return c.find((p) => p && fs.existsSync(p)) || null;
+}
+
+// The quotation is wrapped in the page's own stylesheet so the PDF matches the screen
+function printPage(html) {
+  const index = fs.readFileSync(path.join(APP_DIR, "index.html"), "utf8");
+  const style = (index.match(/<style>[\s\S]*?<\/style>/) || [""])[0];
+  const fonts = (index.match(/<link rel="stylesheet"[^>]*>/) || [""])[0];
+  const safe = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Quotation</title>${fonts}${style}</head><body><div id="qDoc"><div class="panel">${safe}</div></div></body></html>`;
+}
+
+// Edge's launcher returns before the file is written, so we watch the file rather than the exit code
+function printPdf(browser, htmlFile, pdfFile) {
+  return new Promise((resolve, reject) => {
+    const profile = fs.mkdtempSync(path.join(os.tmpdir(), "pmt-print-"));
+    const args = [
+      "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
+      "--user-data-dir=" + profile, "--virtual-time-budget=5000", "--no-pdf-header-footer",
+      "--print-to-pdf=" + pdfFile, "file:///" + htmlFile.replace(/\\/g, "/"),
+    ];
+    let child, done = false, lastSize = -1;
+    const started = Date.now();
+    const finish = (err) => {
+      if (done) return;
+      done = true;
+      clearInterval(timer);
+      try { if (child && child.exitCode === null) child.kill(); } catch (e) {}
+      setTimeout(() => { try { fs.rmSync(profile, { recursive: true, force: true }); } catch (e) {} }, 3000);
+      err ? reject(err) : resolve();
+    };
+    const timer = setInterval(() => {
+      let size = -1;
+      try { size = fs.statSync(pdfFile).size; } catch (e) {}
+      if (size > 0 && size === lastSize) return finish();
+      lastSize = size;
+      if (Date.now() - started > 30000) finish(new Error("The browser took too long to make the PDF."));
+    }, 300);
+    try {
+      child = spawn(browser, args, { stdio: "ignore" });
+      child.on("error", (e) => finish(new Error("The browser could not be started. " + e.message)));
+    } catch (e) {
+      finish(e);
+    }
+  });
+}
+
+async function quotePdf(req, res, cfg) {
+  const b = await readJson(req, MAX_STATE);
+  const no = String(b.no || "");
+  if (!/^SMQ-\d{4}-\d{3,6}$/.test(no)) {
+    return send(res, 400, { ok: false, error: "The quotation number must look like SMQ-2026-041." });
+  }
+  const html = typeof b.html === "string" ? b.html.trim() : "";
+  if (!html) return send(res, 400, { ok: false, error: "There is no quotation to print." });
+
+  const browser = findBrowser(cfg);
+  if (!browser) {
+    return send(res, 501, { ok: false, error: "No Chrome or Edge was found on this computer, so the PDF was not made. Use Print or save as PDF instead, or set \"browser\" in sitebook.config.json." });
+  }
+
+  // Into the client's 03 folder when it exists, otherwise into Clients/Quotations
+  const root = cfg.clientsRoot;
+  fs.mkdirSync(root, { recursive: true });
+  const code = String(b.code || "");
+  let folder = null;
+  if (/^SMB-\d{4}-\d{3,6}$/.test(code)) {
+    const hit = fs.readdirSync(root).find((n) => n === code || n.startsWith(code + " "));
+    if (hit) folder = path.join(root, hit, FOLDERS[2]);
+  }
+  if (!folder) folder = path.join(root, "Quotations");
+  fs.mkdirSync(folder, { recursive: true });
+
+  const base = safeName(no + " " + String(b.title || "")) || no;
+  let pdf = path.join(folder, base + ".pdf");
+  for (let n = 2; fs.existsSync(pdf); n++) pdf = path.join(folder, `${base} (${n}).pdf`);
+  if (!inside(root, pdf)) {
+    return send(res, 400, { ok: false, error: "That name would put the PDF outside the clients folder." });
+  }
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pmt-quote-"));
+  const htmlFile = path.join(tmpDir, "quotation.html");
+  fs.writeFileSync(htmlFile, printPage(html));
+  try {
+    await printPdf(browser, htmlFile, pdf);
+  } catch (e) {
+    return send(res, 500, { ok: false, error: "The PDF was not made. " + e.message });
+  } finally {
+    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (e) {}
+  }
+
+  console.log(`Saved ${pdf}`);
+  send(res, 201, { ok: true, pdf, folder, where: path.relative(root, folder) });
+}
+
 // ---------- server ----------
 
 function serveIndex(req, res) {
@@ -291,6 +415,7 @@ function makeHandler(cfg) {
           ok: true,
           app: "sitebook",
           store: true,
+          pdf: !!findBrowser(cfg),
           clientsRoot: cfg.clientsRoot + path.sep,
           nextSeq: nextSeq(cfg.clientsRoot),
         });
@@ -298,6 +423,7 @@ function makeHandler(cfg) {
       if (read && url === "/api/state") return send(res, 200, Object.assign({ ok: true }, readState(cfg)));
       if (req.method === "PUT" && url === "/api/state") return await saveState(req, res, cfg);
       if (req.method === "POST" && url === "/api/clients") return await createClient(req, res, cfg);
+      if (req.method === "POST" && url === "/api/quotes/pdf") return await quotePdf(req, res, cfg);
 
       send(res, 404, { ok: false, error: "Not found." });
     } catch (e) {
@@ -334,6 +460,8 @@ function main() {
     console.log(`${APP_NAME} is running at ${url}`);
     console.log(`Client folders go in ${cfg.clientsRoot}`);
     console.log(`Changes are saved in ${path.join(cfg.dataDir, "state.json")}`);
+    const browser = findBrowser(cfg);
+    console.log(browser ? `Quotation PDFs are made with ${browser}` : "No Chrome or Edge found, quotation PDFs are off. The Print button still works.");
     console.log("Press Ctrl+C to stop.");
     if (process.argv.includes("--open")) openBrowser(url);
   });
@@ -345,4 +473,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { safeName, inside, nextSeq, cleanState, FOLDERS };
+module.exports = { safeName, inside, nextSeq, cleanState, findBrowser, FOLDERS };
