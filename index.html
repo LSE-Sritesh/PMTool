@@ -358,13 +358,17 @@ tr:last-child td{border-bottom:0}
     <!-- ASSISTANT -->
     <section class="view" id="v-assistant">
       <div class="topbar">
-        <div><div class="eyebrow">AI on top of the data</div><h1 class="title">Assistant</h1><div class="sub">This is what an AI agent does once it can read the projects above. Pick a task. The outputs here are pre-written samples to show the shape of the result, not a live model.</div></div>
+        <div><div class="eyebrow">On top of the data</div><h1 class="title">Assistant</h1><div class="sub">Pick a task or ask a question. Every answer is written by rules from the live data in this tool, so it changes as the data changes. No AI model runs here and nothing leaves this laptop. The course shows how a model does the same job in plain language.</div></div>
       </div>
       <div class="grid ai">
-        <div class="prompts" id="prompts"></div>
+        <div class="prompts" id="prompts">
+          <div class="panel"><div class="bd field" style="grid-template-columns:1fr 100px"><div><label for="aiProj">Project for the first two tasks</label><select id="aiProj" style="width:100%"></select></div><div><label for="aiDays">Delay, days</label><input id="aiDays" type="number" value="5" min="1" max="60" style="width:100%"></div></div></div>
+          <div class="prompts" id="aiTasks"></div>
+          <form class="compose" id="aiAsk" style="margin-top:4px"><input id="aiQ" placeholder="Ask, like what is overdue, or how is Kissa Roku doing"><button class="btn primary" type="submit">Ask</button></form>
+        </div>
         <div>
           <div class="panel"><div class="hd"><h3 id="outTitle">Pick a task on the left</h3><button class="btn sm" id="btnCopy" hidden>Copy</button></div><div class="bd out" id="out">Each task reads the same project data the rest of this tool shows. Nothing is typed twice.</div></div>
-          <div class="note" style="margin-top:14px"><b>Why this matters for the course.</b> Every task on the left is a prompt plus the right data. Day 1 teaches the prompt. Day 2 teaches how to hand it a project file, a site log or an approval list, and how to turn it into an agent that runs on its own instruction. Wiring it into a live system like this one is the part that needs a builder.</div>
+          <div class="note" style="margin-top:14px"><b>Why this matters for the course.</b> Every task on the left is a set of rules plus the right data. A model does the same job in plain language, and handles the questions the rules do not know. Day 1 teaches the prompt. Day 2 teaches how to hand it a project file, a site log or an approval list, and how to turn it into an agent that runs on its own instruction. Wiring a model into a live system like this one is the part that needs a builder, and a decision on whose account pays for it.</div>
         </div>
       </div>
     </section>
@@ -446,61 +450,6 @@ let LOG=[
  {who:"kumar",proj:"hana",time:"13:45",note:"Walked the snag list ahead of tomorrow's joint inspection. Exhaust duct joint sealed today. Fridge door adjusted. Glass panel 3 still scratched, glazier Friday.",flag:"",flagText:"",photos:5}
 ];
 
-const PROMPTS=[
- {t:"Draft this week's client update for Kissa Roku",s:"Reads the thread, milestones and site log",title:"Weekly update, Kissa Roku, week of {dm:-2}",out:
-`Dear Ms Lim,
-
-Here is where Kissa Roku stands this week.
-
-Progress on site. The ceiling grid is 80 percent up and kitchen wall tiling has started. Six workers were on site this morning.
-
-The one thing holding us. Bomba has not yet cleared the sprinkler relocation (resubmitted 9 days ago). Until it clears, we cannot close the ceiling. We have a contractor on standby so work restarts the same day approval lands.
-
-Your decision this week. VO-04 (quartz counter) is approved, thank you. The revised invoice goes out today.
-
-Opening date. {dm:37} still holds if Bomba clears by {dl:3}. If it slips past {w:3}, each further day moves the opening by one day. I will confirm on {w:3} at 5pm either way.
-
-Aiman
-Project Manager, SEMBA Malaysia`,src:"Built from the Kissa Roku thread (4 messages), 7 milestones, today's 08:35 site check-in and the approvals queue."},
- {t:"What slips if Bomba takes five more working days",s:"Walks the dependencies on the timeline",title:"Impact of a 5 day Bomba delay on Kissa Roku",out:
-`If Bomba clears on {dm:8} instead of {dm:3}, this is the chain.
-
-1. Ceiling close moves from {d:2} to {d:9} (5 working days).
-2. Kitchen equipment delivery on {d:13} is unaffected, but installation cannot start until the ceiling is closed, so it waits 1 working day.
-3. Practical completion moves from {d:23} to {d:30}.
-4. Snagging window shrinks from 6 working days to 3 unless handover moves.
-5. Soft opening on {d:37} is still possible with a 3 day snagging window, but there is no buffer left.
-
-Two ways to protect the date.
-Option A. Ask Ms Lim to accept a shorter snagging window, with a defects visit the week after opening. Cheap, but it puts snags in front of customers.
-Option B. Add a second finishing crew for the week of {dm:13}. Roughly RM 9,000 to 12,000 at current rates. Keeps the full snagging window.
-
-Recommendation. Raise Option B with Ms Lim now, while Bomba is still pending, rather than after the delay is confirmed.`,src:"Built from the Kissa Roku plan dates, milestones and the open Bomba approval. Crew cost is an estimate the QS should confirm."},
- {t:"Summarise today's site check-ins for the PMs",s:"Four check-ins, two coordinators",title:"Site summary, {dl:0}",out:
-`Two items need a PM today.
-
-Aoi Logistics Office (Kumar, 09:10). BLOCKING. Carpenter will not order material after {w:3} until claim 3 (RM 312,000, 21 days overdue) is paid. Aiman to escalate with Mr Nakamura today, not {w:3}.
-
-Kissa Roku (Farah, 08:35). DECISION. Tiler wants to proceed past column C4 before Bomba clears. If Bomba asks for a further sprinkler move near C4, that tiling comes out. Aiman to decide by 2pm so the tiler does not lose the afternoon.
-
-No action needed.
-Hana Bakery (Kumar, 13:45). Snag list walked ahead of tomorrow's joint inspection. 2 of 3 open snags fixed today. Glass panel {w:3}.
-Sakura Kids Kiosk (Farah, 11:20). DLP drawer fix done, photos filed.
-
-Headcount on site today. Kissa Roku 6, Aoi 14.`,src:"Built from the four check-ins logged today and the approvals queue."},
- {t:"Which clients has sales not spoken to in 7 days",s:"Cross-checks the threads against the sales owner",title:"Sales follow-up gaps",out:
-`Two clients have had no message from their salesperson in the last 7 days.
-
-Kobe Optical (Priya). Last sales message none on record. Last contact was Mei Ling on Monday about the shopfront drawing. Mall approval is due {w:2}, a good reason to call Ms Wong and confirm the site possession date of {dm:12}.
-
-Aoi Logistics Office (Priya). No sales message since claim 3 fell overdue. Aiman has been chasing payment alone. A call from Priya to Mr Nakamura separates the relationship from the invoice chase.
-
-Covered this week.
-Kissa Roku, Daniel on Monday (VO-04).
-Tsubaki Ramen, Daniel on Thursday (sign-off chase).
-
-Suggested next step. Priya makes two calls today. Log both in the project thread so the PM sees them.`,src:"Built from the six project threads and the team roster. Only messages logged in the tool count, calls made outside it are invisible, which is the point of keeping everything in one place."}
-];
 
 // ---------- helpers ----------
 const BASE=new Date("2026-09-23");const _n=new Date();const TODAY=new Date(_n.getFullYear(),_n.getMonth(),_n.getDate());
@@ -510,7 +459,7 @@ const rel=n=>{const d=new Date(TODAY);d.setDate(d.getDate()+n);return d};
 const T=str=>str.replace(/\{(d|dm|dl|w):(-?\d+)\}/g,(_,k,n)=>{const d=rel(+n);const o={d:{day:"numeric",month:"short"},dm:{day:"numeric",month:"long"},dl:{weekday:"long",day:"numeric",month:"long"},w:{weekday:"long"}}[k];return d.toLocaleDateString("en-GB",o)});
 // shift every sample date so the story sits on today's date whenever the page is opened
 P.forEach(p=>{p.open=shiftISO(p.open);Object.keys(p.plan).forEach(k=>p.plan[k]=p.plan[k].map(shiftISO));p.milestones.forEach(m=>m[1]=shiftISO(m[1]));p.thread.forEach(t=>t[3]=T(t[3]));p.risk=T(p.risk)});
-APPR.forEach(a=>{a.impact=T(a.impact);a.on=T(a.on)});LOG.forEach(l=>{l.note=T(l.note);l.flagText=T(l.flagText)});PROMPTS.forEach(q=>{q.title=T(q.title);q.out=T(q.out)});
+APPR.forEach(a=>{a.impact=T(a.impact);a.on=T(a.on)});LOG.forEach(l=>{l.note=T(l.note);l.flagText=T(l.flagText)});
 document.querySelectorAll("[data-today-long]").forEach(e=>e.textContent=TODAY.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}));
 const fmtRM=n=>"RM "+Math.round(n).toLocaleString("en-MY");
 const fmtD=s=>{const d=new Date(s);return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})};
@@ -680,9 +629,114 @@ function renderAppr(){
 $("#apprFilter").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;apprF=b.dataset.f;document.querySelectorAll("#apprFilter .chip").forEach(x=>x.classList.toggle("on",x===b));renderAppr()});
 $("#apprTable").addEventListener("click",e=>{const d=e.target.closest("[data-done]"),c=e.target.closest("[data-chase]");if(d){APPR.find(a=>a.id==d.dataset.done).state="done";keep("apprDone",+d.dataset.done);renderAppr();renderOverview();toast("Marked done.")}if(c){const a=APPR.find(x=>x.id==c.dataset.chase);toast("Sample only. Nothing was sent to "+a.on.split(" (")[0]+".")}});
 
-// ---------- assistant ----------
-function renderPrompts(){$("#prompts").innerHTML=PROMPTS.map((p,i)=>`<button class="prompt" data-p="${i}">${p.t}<small>${p.s}</small></button>`).join("")}
-$("#prompts").addEventListener("click",e=>{const b=e.target.closest(".prompt");if(!b)return;document.querySelectorAll(".prompt").forEach(x=>x.classList.toggle("on",x===b));const p=PROMPTS[+b.dataset.p];$("#outTitle").textContent=p.title;$("#out").innerHTML=`<div id="outText">${p.out.replace(/</g,"&lt;")}</div><div class="src">Sample output. ${p.src}</div>`;$("#btnCopy").hidden=false});
+// ---------- assistant, rules over the live data, no model (PRD 7.6) ----------
+// Every answer is built from P, APPR and LOG as they are right now, saved changes included. Nothing is invented, no figure is guessed.
+const aiL=s=>new Date(s).toLocaleDateString("en-GB",{day:"numeric",month:"long"});
+const aiW=s=>new Date(s).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+const aiWork=(d,n)=>{const x=new Date(d);let k=0;while(k<n){x.setDate(x.getDate()+1);if(x.getDay()%6)k++}return x};
+const aiN=(n,w)=>n+" "+w+(n===1?"":"s");
+const aiFirst=s=>String(s).split(/(?<=\.)\s/)[0];
+const aiWorkers=n=>{const m=/(\d+)\s+workers?/i.exec(n);return m?+m[1]:null};
+const aiOpen=p=>APPR.filter(a=>a.proj===p.id&&a.state==="open");
+const aiNext=p=>p.milestones.filter(m=>m[2]!=="done").sort((a,b)=>new Date(a[1])-new Date(b[1]));
+const aiClient=p=>p.client.split(",")[0];
+function aiUpdate(p){
+  const logs=LOG.filter(l=>l.proj===p.id),last=logs[logs.length-1],open=aiOpen(p),theirs=open.filter(a=>a.side==="theirs"&&!/client/i.test(a.on)),mine=open.filter(a=>/client/i.test(a.on)),next=aiNext(p).slice(0,3),late=p.milestones.filter(m=>m[2]==="late");
+  const lines=[`Dear ${aiClient(p)},`,"",`Here is where ${p.name} stands this week.`,"",
+    "Progress on site. "+(last?last.note+(last.day&&last.day!==dayKey(TODAY)?" (logged "+fmtD(last.day)+")":""):"No site check-in has been logged this week."),"",
+    "What is holding us. "+(p.risk||theirs.length?[p.risk,...theirs.map(a=>`${a.item} has been with ${a.on} for ${aiN(a.days,"day")}.`)].filter(Boolean).join(" "):"Nothing is holding the programme this week."),"",
+    "Your decisions. "+(mine.length?mine.map(a=>`${a.item}, waiting ${aiN(a.days,"day")}.`).join(" "):"Nothing is waiting on you right now."),"",
+    "Next milestones. "+(next.length?next.map(([t,d,s])=>`${t} on ${aiL(d)}${s==="late"?" (overdue)":""}.`).join(" "):"No open milestones."),"",
+    `Opening date. ${aiW(p.open)}${late.length?", if the overdue items above clear this week":""}.`,"",TEAM[p.pm].n,"Project Manager, SEMBA Malaysia"];
+  return{title:`Weekly update, ${p.name}, ${aiL(TODAY)}`,text:lines.join("\n"),src:`Built from ${aiN(p.thread.length,"thread message")}, ${aiN(p.milestones.length,"milestone")}, ${aiN(logs.length,"site check-in")} and ${aiN(open.length,"open approval")} for ${p.name}.`};
+}
+function aiDelay(p,days){
+  const src=`Built from the milestones and open approvals of ${p.name}. Working days skip weekends. Costs are not estimated, the QS prices them.`;
+  const wait=aiOpen(p).filter(a=>a.side==="theirs").sort((a,b)=>b.days-a.days)[0],next=aiNext(p);
+  if(!next.length)return{title:`Delay impact, ${p.name}`,text:`${p.name} has no open milestones, so there is nothing left to slip.`,src};
+  const lines=[wait?`If ${wait.item} (waiting on ${wait.on}, ${aiN(wait.days,"day")} so far) takes ${aiN(days,"more working day")}, this is the chain for ${p.name}.`:`Nothing is waiting on others for ${p.name}. If the next step slips by ${aiN(days,"working day")} anyway, this is the chain.`,""];
+  let end=null;next.forEach(([t,d],i)=>{const late=new Date(d)<TODAY;end=aiWork(late?TODAY:d,days);lines.push(late?`${i+1}. ${t} was due ${fmtD(d)} and now lands on ${fmtD(end)}.`:`${i+1}. ${t} moves from ${fmtD(d)} to ${fmtD(end)}.`)});
+  const gap=daysBetween(end,p.open);
+  lines.push("",gap>=0?`Buffer to opening. The last milestone lands on ${aiL(end)}, ${aiN(gap,"day")} before the opening on ${aiL(p.open)}.`:`Opening at risk. The last milestone lands on ${aiL(end)}, ${aiN(-gap,"day")} after the planned opening on ${aiL(p.open)}.`);
+  if(gap<7)lines.push("","Two ways to protect the date.",`Option A. Ask ${aiClient(p)} to accept a shorter snagging window, with a defects visit the week after opening. Cheap, but it puts snags in front of customers.`,`Option B. Add a second finishing crew for the last two weeks. ${p.qs?TEAM[p.qs].n:"The QS"} to price it before it is offered.`,"",`Recommendation. Raise Option B with ${aiClient(p)} now, while the delay is still a risk rather than a fact.`);
+  return{title:`Impact of a ${days} working day delay on ${p.name}`,text:lines.join("\n"),src};
+}
+function aiSite(){
+  const tl=todayLog(),title=`Site summary, ${aiW(TODAY)}`;
+  if(!tl.length)return{title,text:"No site check-ins have been logged today.",src:"Built from today's site check-ins."};
+  const who=[...new Set(tl.map(l=>TEAM[l.who].n))],flagged=tl.filter(l=>l.flag).sort((a,b)=>(a.flag==="bad"?0:1)-(b.flag==="bad"?0:1)),calm=tl.filter(l=>!l.flag),heads=tl.map(l=>[pj(l.proj).name,aiWorkers(l.note)]).filter(x=>x[1]!=null);
+  const lines=[`${aiN(tl.length,"check-in")} today from ${who.join(" and ")}.`,"",flagged.length?`${flagged.length===1?"One item needs":flagged.length+" items need"} a PM today.`:"Nothing is flagged today.",""];
+  flagged.forEach(l=>lines.push(`${pj(l.proj).name} (${TEAM[l.who].n}, ${l.time}). ${l.flag==="bad"?"BLOCKING":"DECISION"}. ${l.flagText.replace(/^(Blocking|Needs a decision)\.\s*/,"")} ${l.note} ${TEAM[pj(l.proj).pm].n} to act today.`,""));
+  if(calm.length){lines.push("No action needed.");calm.forEach(l=>lines.push(`${pj(l.proj).name} (${TEAM[l.who].n}, ${l.time}). ${l.note}`));lines.push("")}
+  lines.push(heads.length?"Headcount on site today. "+heads.map(([n,c])=>`${n} ${c}`).join(", ")+".":"No headcounts were logged today. Coordinators can add \"8 workers on site\" to a note and it is picked up here.");
+  return{title,text:lines.join("\n"),src:`Built from ${aiN(tl.length,"check-in")} logged today.`};
+}
+function aiSales(){
+  const gaps=[],covered=[],callers=new Set();
+  P.filter(p=>p.phase<7).forEach(p=>{const s=[...p.thread].reverse().find(m=>m[0]==="sales"),sp=p.sales?TEAM[p.sales].n:"";
+    if(s)covered.push(`${p.name}, ${s[1]} (${s[2]}). ${aiFirst(s[3])}`);
+    else{const last=p.thread[p.thread.length-1],nx=aiNext(p)[0];if(sp)callers.add(sp);gaps.push(`${p.name} (${sp||"no salesperson set"}). No sales message on record.${last?` Last message was ${last[1]} (${last[2]}).`:" The thread is empty."}${nx?` ${nx[0]} is due ${aiL(nx[1])}, a good reason to call ${aiClient(p)}.`:""}`)}});
+  const lines=[gaps.length?`${gaps.length===1?"One client has":gaps.length+" clients have"} had no message from their salesperson in the project thread.`:"Every live project has a message from sales in its thread.","",...gaps.flatMap(g=>[g,""])];
+  if(covered.length)lines.push("Covered.",...covered,"");
+  lines.push(gaps.length?`Suggested next step. ${[...callers].join(" and ")||"Sales"} make the calls today and log them in the project thread, so the PM sees them.`:"Suggested next step. Keep logging calls in the thread, so the PM sees them.");
+  return{title:"Sales follow-up gaps",text:lines.join("\n"),src:"Built from every live project thread and the team roster. Only messages logged in the tool count, calls made outside it are invisible, which is the point of keeping everything in one place."};
+}
+function aiStatus(p){
+  const open=aiOpen(p),next=aiNext(p).slice(0,3),last=p.thread[p.thread.length-1],logs=LOG.filter(l=>l.proj===p.id),log=logs[logs.length-1],dl=daysBetween(TODAY,p.open);
+  const lines=[`${p.name}. ${PHASES[p.phase]} phase, ${p.statusText.toLowerCase()}. ${dl>=0?`Opens ${aiW(p.open)}, in ${aiN(dl,"day")}.`:`Opened ${aiW(p.open)}, ${aiN(-dl,"day")} ago.`}`,"",
+    p.risk?`Watch. ${p.risk}`:"No risk line on this project.","",
+    "Next milestones. "+(next.length?next.map(([t,d,s])=>`${t} ${s==="late"?"was due":"on"} ${aiL(d)}${s==="late"?", "+aiN(daysBetween(d,TODAY),"day")+" late":""}.`).join(" "):"None open."),"",
+    "Approvals. "+(open.length?open.map(a=>`${a.item}, with ${a.on}, ${aiN(a.days,"day")}.`).join(" "):"Nothing waiting."),"",
+    `Money. Contract sum ${fmtRM(p.budget)}, claimed ${fmtRM(p.claimed)}, committed ${fmtRM(p.committed)}, uncommitted ${fmtRM(p.budget-p.committed)}, approved variations ${fmtRM(p.vo)}.`,"",
+    "Last update. "+(last?`${last[1]} (${last[2]}). ${last[3]}`:"No messages yet."),"",
+    "Last site check-in. "+(log?`${TEAM[log.who].n} at ${log.time}${log.day&&log.day!==dayKey(TODAY)?" on "+fmtD(log.day):""}. ${log.note}`:"None yet.")];
+  return{title:`How ${p.name} is doing`,text:lines.join("\n"),src:`Built from the ${p.name} record, its thread, its approvals and its site log.`};
+}
+function aiOverdue(){
+  const late=[],appr=APPR.filter(a=>a.state==="open"&&a.days>=7).sort((a,b)=>b.days-a.days);
+  P.forEach(p=>p.milestones.forEach(([t,d,s])=>{if(s==="late")late.push(`${p.name}, ${t}, due ${aiL(d)}, ${aiN(daysBetween(d,TODAY),"day")} late.`)}));
+  const lines=[late.length?`${aiN(late.length,"milestone")} overdue.`:"No milestone is overdue.","",...late,"",appr.length?`${aiN(appr.length,"approval")} waiting a week or more.`:"No approval has waited a week yet.","",...appr.map(a=>`${a.item} (${pj(a.proj).name}), with ${a.on}, ${aiN(a.days,"day")}.${a.impact?" "+a.impact:""}`)];
+  return{title:"What is overdue",text:lines.join("\n").replace(/\n{3,}/g,"\n\n"),src:"Built from every milestone and the approvals queue."};
+}
+function aiApprovals(){
+  const open=APPR.filter(a=>a.state==="open").sort((a,b)=>b.days-a.days),ours=open.filter(a=>a.side==="ours"),theirs=open.filter(a=>a.side==="theirs");
+  const row=a=>`${a.item} (${pj(a.proj).name}), with ${a.on}, ${aiN(a.days,"day")}.`;
+  const lines=[`${aiN(open.length,"open approval")}. ${ours.length} on SEMBA, ${theirs.length} on others.`,"",theirs.length?"Waiting on others.":"",...theirs.map(row),"",ours.length?"Waiting on SEMBA.":"",...ours.map(row)];
+  return{title:"Approvals waiting",text:lines.join("\n").replace(/\n{3,}/g,"\n\n"),src:"Built from the approvals queue."};
+}
+function aiMoney(){
+  const live=P.filter(p=>p.phase<7),sum=k=>live.reduce((s,p)=>s+p[k],0),due=APPR.filter(a=>a.state==="open"&&a.type==="Progress claim"&&a.days>0);
+  const lines=[`Across ${aiN(live.length,"live project")}. Contract sum ${fmtRM(sum("budget"))}, claimed ${fmtRM(sum("claimed"))}, committed ${fmtRM(sum("committed"))}.`,"",...live.map(p=>`${p.name}. Contract ${fmtRM(p.budget)}, claimed ${fmtRM(p.claimed)}, committed ${fmtRM(p.committed)}, uncommitted ${fmtRM(p.budget-p.committed)}.`),"",due.length?"Claims overdue. "+due.map(a=>`${a.item} (${pj(a.proj).name}), ${aiN(a.days,"day")}.`).join(" "):"No progress claim is overdue."];
+  return{title:"Where the money is",text:lines.join("\n"),src:"Built from the money fields on every live project and the open progress claims."};
+}
+function aiOpenings(){
+  const list=P.slice().sort((a,b)=>new Date(a.open)-new Date(b.open)).map(p=>{const dl=daysBetween(TODAY,p.open);return `${p.name}. ${aiW(p.open)}, ${dl>=0?"in "+aiN(dl,"day"):aiN(-dl,"day")+" ago"}. ${PHASES[p.phase]} phase.`});
+  return{title:"Opening dates",text:list.join("\n"),src:"Built from the opening date on every project."};
+}
+function aiAsk(q){
+  const s=q.toLowerCase(),hit=P.find(p=>{const n=p.name.toLowerCase(),w=n.split(" ")[0];return s.includes(n)||(w.length>=3&&new RegExp("\\b"+w.replace(/[^a-z0-9]/g,"")+"\\b").test(s))});
+  if(hit)return aiStatus(hit);
+  if(/overdue|late|behind|slip/.test(s))return aiOverdue();
+  if(/approv|waiting|sign/.test(s))return aiApprovals();
+  if(/site|check|today|worker|headcount/.test(s))return aiSite();
+  if(/sales|quiet|follow|call/.test(s))return aiSales();
+  if(/money|claim|contract|budget|paid|invoice|quot|cash/.test(s))return aiMoney();
+  if(/open|launch|handover|when/.test(s))return aiOpenings();
+  return{title:"Try one of these",text:"The rules here know a fixed set of questions.\n\n1. What is overdue\n2. What is waiting on approval\n3. What happened on site today\n4. Which clients have gone quiet\n5. Where is the money\n6. When does each project open\n7. A project by name, like how is Kissa Roku doing",src:"A model would take any question. These rules take the ones above."};
+}
+const TASKS=[
+ {t:"Draft this week's client update",s:"For the project chosen above. Reads the thread, milestones, site log and approvals",run:()=>aiUpdate(aiProj())},
+ {t:"What slips if the wait goes on",s:"Shifts every open milestone by the delay days above",run:()=>aiDelay(aiProj(),Math.max(1,+$("#aiDays").value||5))},
+ {t:"Summarise today's site check-ins",s:"Flagged items first, then headcount",run:aiSite},
+ {t:"Which clients has sales not spoken to",s:"Checks every live project thread for a sales message",run:aiSales}];
+let aiSel="kissa";
+const aiProj=()=>pj($("#aiProj").value)||P[0];
+function aiShow(r){$("#outTitle").textContent=r.title;$("#out").innerHTML=`<div id="outText">${esc(r.text)}</div><div class="src">Written by rules from the live data, not by a model. ${esc(r.src)}</div>`;$("#btnCopy").hidden=false}
+function renderPrompts(){$("#aiProj").innerHTML=P.map(p=>`<option value="${p.id}"${p.id===aiSel?" selected":""}>${esc(p.name)}</option>`).join("");$("#aiTasks").innerHTML=TASKS.map((p,i)=>`<button class="prompt" data-p="${i}">${p.t}<small>${p.s}</small></button>`).join("")}
+$("#aiProj").addEventListener("change",()=>{aiSel=$("#aiProj").value;const on=document.querySelector(".prompt.on");if(on)aiShow(TASKS[+on.dataset.p].run())});
+$("#aiDays").addEventListener("input",()=>{const on=document.querySelector(".prompt.on");if(on&&on.dataset.p==="1")aiShow(TASKS[1].run())});
+$("#aiTasks").addEventListener("click",e=>{const b=e.target.closest(".prompt");if(!b)return;document.querySelectorAll(".prompt").forEach(x=>x.classList.toggle("on",x===b));aiShow(TASKS[+b.dataset.p].run())});
+$("#aiAsk").onsubmit=e=>{e.preventDefault();const q=$("#aiQ").value.trim();if(!q)return;document.querySelectorAll(".prompt").forEach(x=>x.classList.remove("on"));aiShow(aiAsk(q))};
 $("#btnCopy").onclick=()=>{const t=$("#outText")?.innerText||"";navigator.clipboard?.writeText(t).then(()=>toast("Copied")).catch(()=>{const r=document.createRange();r.selectNodeContents($("#outText"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Select and copy")})};
 
 // ---------- quotation ----------
@@ -824,7 +878,7 @@ $("#cForm").onsubmit=async e=>{e.preventDefault();
     <div class="eyebrow" style="margin-bottom:4px">Windows</div><pre style="margin:0 0 10px;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cWin">${esc(win)}</pre>
     <div class="eyebrow" style="margin-bottom:4px">Mac</div><pre style="margin:0;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cMac">${esc(mac)}</pre>`}</div></div>`;
   $("#btnCopyTree").hidden=!!made;$("#btnCopyTree").onclick=()=>{navigator.clipboard?.writeText(win+"\n"+mac).then(()=>toast("Commands copied")).catch(()=>toast("Select and copy the commands"))};
-  CSEQ++;renderOverview();renderCards("#projCards","all");renderGantt();qFillProjects();$("#cForm").reset();setTimeout(cTree,0);toast(made?"Client and folders created":"Client created and added to projects");
+  CSEQ++;renderOverview();renderCards("#projCards","all");renderGantt();qFillProjects();renderPrompts();$("#cForm").reset();setTimeout(cTree,0);toast(made?"Client and folders created":"Client created and added to projects");
 };
 
 // ---------- local server, optional (PRD 7.1) ----------
@@ -849,7 +903,7 @@ function applyState(s){
   STATE.apprDone.forEach(id=>{const a=APPR.find(x=>x.id==id);if(a)a.state="done"});
   STATE.snagsFixed.forEach(f=>{const p=pj(f.proj),g=p&&p.snags.find(x=>x[0]===f.title);if(g)g[1]="closed"});
   STATE.quotes.forEach(q=>{const p=pj(q.proj);if(p)p.budget=+q.total||0;const m=/^SMQ-(\d{4})-(\d+)$/.exec(q.no||"");if(m&&+m[1]===year)QSEQ=Math.max(QSEQ,+m[2]+1)});
-  renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();qFillProjects();renderQLines();renderQReg();cTree();
+  renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();qFillProjects();renderQLines();renderQReg();renderPrompts();cTree();
 }
 async function loadState(){try{const r=await fetch("/api/state");const j=await r.json();if(r.ok&&j.ok){REV=j.rev;STORE=true;applyState(j.state);saveMark(true);$("#btnClearSaved").hidden=false;pushClientViews()}else saveMark(false,j.error)}catch(e){saveMark(false)}}
 $("#btnClearSaved").onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="Click again to clear";b._x=setTimeout(()=>{delete b.dataset.sure;b.textContent="Clear saved changes"},4000);return}clearTimeout(b._x);STATE=noState();saveState().then(()=>{if(SAVED)location.reload()})};

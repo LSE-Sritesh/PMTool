@@ -93,7 +93,7 @@ Standard folder set, one per client, under `Clients/<SMB-YYYY-NNN> <Brand>/`.
 01 Brief and site survey, 02 Design, 03 Quotation and BOQ, 04 Submissions (mall, Bomba, authority), 05 Contract and variations, 06 Site (photos, daily logs), 07 Claims and invoices, 08 Handover and DLP, plus a `<code> <brand> project sheet.md`.
 
 ### 4.8 Assistant
-Four pre-written outputs (weekly client update, delay impact chain, site summary, sales follow-up gaps) selected by prompt buttons, each labelled "Sample output". No model is called. The note under it ties the tab to the course. Do not wire a live model in without a stated data boundary and a cost owner.
+Rewritten 30 September. Four tasks (weekly client update, delay impact chain, site summary, sales follow-up gaps) and an Ask box. Every answer is written by rules that read the live data, sample projects plus saved changes, at the moment the button is pressed. A project picker and a delay field feed the first two tasks. The Ask box answers a fixed set of questions (overdue, approvals, site today, quiet clients, money, opening dates, or any project by name) and lists them when it does not understand. Every answer carries the line "Written by rules from the live data, not by a model" and says what it was built from. No model is called, nothing leaves the laptop. The note under it ties the tab to the course. Do not wire a live model in without a stated data boundary and a cost owner.
 
 ## 5. Design system
 
@@ -173,6 +173,8 @@ Built 30 September 2026.
 ### 7.6 Assistant, live
 Only after 7.2. Replace the canned outputs with calls to a model, passing the project JSON as context, with the same four prompts as system templates. Needs an API key owner, a monthly cost cap, and a line in the UI saying what data leaves the machine. Keep "Sample output" labels until this is done.
 
+Decision on 30 September 2026. No model for the prototype, because there is no API key and this laptop (8 GB, no graphics card, no model runtime installed) would run a local model slowly. Built instead, rules over the live data, in `index.html` under "assistant, rules over the live data". The four pre-written samples are gone, replaced by generators that read the projects, approvals and site log as they are now, so the answers change as the data changes. The "Sample output" label is replaced by "Written by rules from the live data, not by a model", which is the honest label for what runs. Rules invent nothing, in particular no cost figures. When a model is wired in later, it takes over the same four tasks and the Ask box, and the label changes again.
+
 ### 7.7 Not planned
 Integrations with Google or Microsoft (suite unknown). WhatsApp (Meta business API cost and approval). Accounting system export (SEMBA's system unknown). Mobile app (the page already works at phone width, run it from the server on the office network first).
 
@@ -191,7 +193,7 @@ Built and working in `server.js`. Local server with folder creation on disk (7.1
 
 Built and working in `index.html`. Today, Projects with detail, Timeline, Site team with check-in form, Approvals with chase and done, Quotation with template, live totals, generate, copy and issue, New client with code, folder preview, commands and project creation, Assistant with four samples. Live date engine. Dark theme. Phone layout.
 
-Not built. Live model (7.6). Client replies from the client page. Hosting for the client page.
+Not built. A live model behind the assistant (7.6, rules run instead). Client replies from the client page. Hosting for the client page.
 
 Known rough edges. Weekday words in sample copy move with the date engine and are not always a Friday. The Gantt shows the current phase's red outline only, not earlier late phases. Opened without the server nothing is saved, so the quotation number, the client code and anything added reset on reload. Marking an approval done does not clear the matching risk line or status on the project. The header form on the quotation screen is 4 columns and drops to 2 under 900px.
 

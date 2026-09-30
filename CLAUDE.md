@@ -9,11 +9,11 @@ A single-file project management prototype for SEMBA Malaysia, a fit-out firm in
 
 ## Start here
 1. Run `node server.js` and open `http://localhost:3000` (or open `index.html` as a file) and click through all eight tabs so you know what exists.
-2. PRD 7.1 to 7.5 are built. `server.js` creates client folders on disk, saves what the user adds to `data/state.json`, prints quotations to PDF through the Chrome or Edge already installed, serves the client page (`client.html` at `/client/<token>`) and stores site photos. No dependencies. Left on the list, 7.6 (live model, needs a decision on cost and data), client replies from the client page, and hosting.
+2. PRD 7.1 to 7.5 are built. `server.js` creates client folders on disk, saves what the user adds to `data/state.json`, prints quotations to PDF through the Chrome or Edge already installed, serves the client page (`client.html` at `/client/<token>`) and stores site photos. No dependencies. The assistant (7.6) runs on rules over the live data, no model, by the owner's decision. Left on the list, a real model behind the assistant when there is a key, client replies from the client page, and hosting.
 3. Keep `index.html` working as a standalone file. The server adds capability, it must not become a requirement.
 
 ## Layout of index.html
-Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme blocks, components). Markup, one `<section class="view">` per tab. `<script>` with data (`PHASES`, `TEAM`, `P` projects, `APPR`, `LOG`, `PROMPTS`, `QTEMPLATE`, `FOLDERS`), helpers, then one render function per screen, then the date engine, then boot at the bottom. The boot line ends with `serverCheck()`, which looks for the local server and switches the New client screen to real folder creation when it finds it.
+Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme blocks, components). Markup, one `<section class="view">` per tab. `<script>` with data (`PHASES`, `TEAM`, `P` projects, `APPR`, `LOG`, `QTEMPLATE`, `FOLDERS`), helpers, then one render function per screen, then the date engine, then boot at the bottom. The boot line ends with `serverCheck()`, which looks for the local server and switches the New client screen to real folder creation when it finds it.
 
 ## Rules
 1. Copy has no dashes and no colons in running text. Use commas, full stops, parentheses, numbered lists.
@@ -31,6 +31,7 @@ Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme bl
 13. Anything that changes data calls `keep()` so it is saved. Screens about today read `todayLog()`, not `LOG`, because `LOG` also holds saved check-ins from earlier days.
 14. The client page only ever sees what `clientView()` in `index.html` returns. Add a field there only if a client may see it. Money, risk lines, site notes and flags stay out.
 15. `client.html` has no stylesheet of its own beyond a few layout rules. The server pastes the main stylesheet in at `<!--STYLE-->`, so the tokens and dark theme carry over.
+16. The assistant invents nothing. Every sentence it writes comes from a field in the data or a count of it. No cost estimates, no made up dates. If a rule cannot say something from the data, it says so.
 
 ## Owner
 Sritesh Naidu, AI Lead, Lemon Sky Edge. He is the trainer selling SEMBA an AI course, this tool is the demo and the seed of a solutions engagement. When in doubt about scope, the question is "does this help him show capability without promising what Lemon Sky has not agreed to build".
