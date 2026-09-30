@@ -18,7 +18,7 @@ Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme bl
 ## Rules
 1. Copy has no dashes and no colons in running text. Use commas, full stops, parentheses, numbered lists.
 2. Do not claim a feature that is not built. "Sample output" and "Concept prototype" labels stay until the thing is real.
-3. Colours are tokens on `:root`, redefined in the two dark blocks. Never a literal colour inside a component.
+3. Colours are tokens on `:root`, redefined in the dark block (`[data-theme="dark"]`, opt in, it does not follow the system setting) and the print block. Never a literal colour inside a component.
 4. Sample tenants are fictional. Do not put SEMBA's real project names in demo data.
 5. Money is computed once. `qTotals()` is the only place quotation maths lives.
 6. The date engine shifts all sample dates to today. Remove it only when real data replaces the sample, and keep `TODAY`.

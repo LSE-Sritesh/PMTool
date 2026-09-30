@@ -14,11 +14,7 @@
   --font:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --serif:"EB Garamond",Georgia,"Times New Roman",serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#0B1220; --panel:#141D33; --line:#2A3650; --ink:#EEF1F7; --ink2:#B4BCCB; --ink3:#8791A5;
-  --blue:#5B79B3; --blue2:#9DB1DC; --bluewash:#1E2B48; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0A1224; --railtext:#C9CBCA;
-  --design:#4F6591; --snag:#7A90BF; --done:#B5A08D; --bronze2:#C9B7A4; --warnink:#F0BE55; --sampleink:#F5D486; --sampleline:#6E5518;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3); color-scheme:dark; }}
+/* the brand theme is what everyone sees. Dark is opt in only, by setting data-theme="dark" on <html>, it no longer follows the system setting */
 :root[data-theme="dark"]{
   --bg:#0B1220; --panel:#141D33; --line:#2A3650; --ink:#EEF1F7; --ink2:#B4BCCB; --ink3:#8791A5;
   --blue:#5B79B3; --blue2:#9DB1DC; --bluewash:#1E2B48; --okwash:#123324; --warnwash:#3A2B0C; --badwash:#3D1717; --rail:#0A1224; --railtext:#C9CBCA;
