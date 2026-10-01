@@ -20,7 +20,7 @@ Order inside the file. `<title>` and `<style>` (tokens on `:root`, dark theme bl
 2. Do not claim a feature that is not built. "Sample output" and "Concept prototype" labels stay until the thing is real.
 3. Colours are tokens on `:root`, redefined in the dark block (`[data-theme="dark"]`, opt in, it does not follow the system setting) and the print block. Never a literal colour inside a component.
 4. Sample tenants are fictional. Do not put SEMBA's real project names in demo data.
-5. Money is computed once. `qTotals()` is the only place quotation maths lives.
+5. Money is computed once. `qTotals()` is the only place quotation maths lives, including cost, profit, margin and the per section figures. The analysis panel and the live totals only display what it returns.
 6. The date engine shifts all sample dates to today. Remove it only when real data replaces the sample, and keep `TODAY`.
 7. Service tax on quotations is applied to labour only, per Service Tax Policy 7/2025. Rate stays a field. SEMBA's finance confirms before a real quote goes out.
 8. The owner edits files between sessions. Re-read before editing, change in place, never restore something he removed. Flag it instead.

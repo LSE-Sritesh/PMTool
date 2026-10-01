@@ -327,14 +327,18 @@ tr:last-child td{border-bottom:0}
         <div><label for="qDisc">Discount (RM)</label><input id="qDisc" type="number" value="0" min="0"></div>
         <div><label for="qSst">Service tax % on labour</label><input id="qSst" type="number" value="6" min="0" step="0.5"></div>
         <div><label for="qDep">Deposit %</label><input id="qDep" type="number" value="30" min="0"></div>
+        <div><label for="qMarkup">Markup % on cost</label><input id="qMarkup" type="number" value="25" min="0" step="0.5"></div>
+        <div><label for="qTarget">Target margin %</label><input id="qTarget" type="number" value="20" min="0" step="0.5"></div>
       </form></div></div>
       <div class="panel" style="margin-top:14px"><div class="hd"><h3>Line items</h3><button class="btn sm" id="btnQuoteAdd">+ Add line</button></div>
-        <div class="tw"><table id="qLines"><thead><tr><th>Section</th><th style="min-width:220px">Description</th><th class="num">Qty</th><th>Unit</th><th class="num">Material RM</th><th class="num">Labour RM</th><th class="num">Amount</th><th></th></tr></thead><tbody></tbody></table></div>
+        <div class="tw"><table id="qLines"><thead><tr><th>Section</th><th style="min-width:220px">Description</th><th class="num">Qty</th><th>Unit</th><th class="num">Material cost</th><th class="num">Labour cost</th><th class="num">Material RM</th><th class="num">Labour RM</th><th class="num">Amount</th><th class="num">Margin</th><th></th></tr></thead><tbody></tbody></table></div>
+        <p class="sub" style="font-size:12.5px;margin:10px 16px 0">Cost is what SEMBA pays the supplier or subcontractor. Type a cost and the selling rate fills in from the markup above. Overtype the rate if you want a different price on that line. Costs and margins stay off the quotation the client sees.</p>
         <div class="bd" style="display:flex;justify-content:flex-end;gap:24px;font-variant-numeric:tabular-nums;flex-wrap:wrap" id="qLive"></div>
       </div>
+      <div class="panel" style="margin-top:14px" id="qAnalysis"><div class="hd"><h3>Analysis, SEMBA only</h3><span class="pill grey">Not on the quotation</span></div><div class="bd" id="qAnalysisBody"></div></div>
       <div id="qDoc" hidden style="margin-top:14px"></div>
       <div class="panel" style="margin-top:14px" id="qReg"><div class="hd"><h3>Issued quotations</h3><span class="pill grey" id="qRegCount"></span></div>
-        <div class="tw"><table><thead><tr><th>No</th><th>Project</th><th>Date</th><th class="num">Total</th><th>Status</th><th>PDF</th><th></th></tr></thead><tbody id="qRegBody"></tbody></table></div>
+        <div class="tw"><table><thead><tr><th>No</th><th>Project</th><th>Date</th><th class="num">Total</th><th class="num">Margin</th><th>Status</th><th>PDF</th><th></th></tr></thead><tbody id="qRegBody"></tbody></table></div>
       </div>
     </section>
 
@@ -780,50 +784,85 @@ $("#chatAsk").onsubmit=e=>{e.preventDefault();const q=$("#chatQ").value.trim();i
 // ---------- quotation ----------
 const SEMBA={name:"SEMBA Malaysia Design & Construction Sdn. Bhd.",addr:"Unit A2-8-1 & A2-8-2, SOHO Suites, No. 20, Jalan Perak, 50450 Kuala Lumpur",tel:"+603 2181 0585"};
 const QSECTIONS=["Preliminaries","Demolition and hacking","Civil and masonry","Ceiling","Flooring","Carpentry and joinery","Electrical","Air conditioning and ventilation","Plumbing and sanitary","Painting and finishes","Glass and shopfront","Signage","Loose furniture","Authority and mall submissions"];
+// section, description, qty, unit, material rate, labour rate, material cost, labour cost. Rates are what the client pays, costs are what SEMBA pays. Sample costs are fictional.
 const QTEMPLATE=[
- ["Preliminaries","Site hoarding, protection and mall compliance",1,"lot",1800,1200],
- ["Preliminaries","Site supervision and coordination, 8 weeks",8,"wk",0,1500],
- ["Preliminaries","Debris disposal and final cleaning",1,"lot",600,900],
- ["Demolition and hacking","Hack existing floor tiles and screed",1450,"sq ft",0,3.5],
- ["Civil and masonry","New brick wall, plaster both sides, 100mm",180,"sq ft",9,7],
- ["Ceiling","Plasterboard ceiling with access panels",1200,"sq ft",7.5,5.5],
- ["Flooring","Porcelain tile 600 x 600, supply and lay",1300,"sq ft",11,6],
- ["Carpentry and joinery","Service counter, laminate finish with quartz top",1,"unit",14500,4200],
- ["Carpentry and joinery","Wall display shelving, plywood and laminate",36,"ft run",180,95],
- ["Electrical","Distribution board and wiring, 20 points",20,"pt",120,110],
- ["Electrical","LED downlights and track lighting, supply and install",42,"no",85,35],
- ["Air conditioning and ventilation","Ducting and diffusers from mall chilled water supply",1,"lot",9800,5600],
- ["Air conditioning and ventilation","Kitchen exhaust hood and duct to mall riser",1,"lot",7200,3800],
- ["Plumbing and sanitary","Water supply, drainage and grease trap connection",1,"lot",3400,2600],
- ["Painting and finishes","Emulsion paint, 2 coats over sealer",1900,"sq ft",1.2,1.3],
- ["Glass and shopfront","12mm tempered glass shopfront with frameless door",1,"lot",16800,4200],
- ["Signage","Fascia signage, illuminated acrylic letters",1,"lot",6500,1800],
- ["Authority and mall submissions","Bomba submission drawings and fee",1,"lot",1200,2800],
- ["Authority and mall submissions","Mall fit-out drawing submission and coordination",1,"lot",0,2500]
+ ["Preliminaries","Site hoarding, protection and mall compliance",1,"lot",1800,1200,1400,900],
+ ["Preliminaries","Site supervision and coordination, 8 weeks",8,"wk",0,1500,0,1150],
+ ["Preliminaries","Debris disposal and final cleaning",1,"lot",600,900,450,700],
+ ["Demolition and hacking","Hack existing floor tiles and screed",1450,"sq ft",0,3.5,0,2.6],
+ ["Civil and masonry","New brick wall, plaster both sides, 100mm",180,"sq ft",9,7,6.8,5.2],
+ ["Ceiling","Plasterboard ceiling with access panels",1200,"sq ft",7.5,5.5,5.6,4.1],
+ ["Flooring","Porcelain tile 600 x 600, supply and lay",1300,"sq ft",11,6,8.4,4.5],
+ ["Carpentry and joinery","Service counter, laminate finish with quartz top",1,"unit",14500,4200,11200,3100],
+ ["Carpentry and joinery","Wall display shelving, plywood and laminate",36,"ft run",180,95,138,70],
+ ["Electrical","Distribution board and wiring, 20 points",20,"pt",120,110,92,82],
+ ["Electrical","LED downlights and track lighting, supply and install",42,"no",85,35,64,26],
+ ["Air conditioning and ventilation","Ducting and diffusers from mall chilled water supply",1,"lot",9800,5600,7600,4300],
+ ["Air conditioning and ventilation","Kitchen exhaust hood and duct to mall riser",1,"lot",7200,3800,5500,2900],
+ ["Plumbing and sanitary","Water supply, drainage and grease trap connection",1,"lot",3400,2600,2600,1950],
+ ["Painting and finishes","Emulsion paint, 2 coats over sealer",1900,"sq ft",1.2,1.3,0.9,1],
+ ["Glass and shopfront","12mm tempered glass shopfront with frameless door",1,"lot",16800,4200,13200,3200],
+ ["Signage","Fascia signage, illuminated acrylic letters",1,"lot",6500,1800,5000,1350],
+ ["Authority and mall submissions","Bomba submission drawings and fee",1,"lot",1200,2800,1200,2200],
+ ["Authority and mall submissions","Mall fit-out drawing submission and coordination",1,"lot",0,2500,0,2000]
 ];
 let QL=[];let QSEQ=41;
 function qNumber(){return "SMQ-"+TODAY.getFullYear()+"-"+String(QSEQ).padStart(3,"0")}
-function qLoadTemplate(){QL=QTEMPLATE.map(r=>({s:r[0],d:r[1],q:r[2],u:r[3],m:r[4],l:r[5]}));renderQLines()}
-function qTotals(){const mat=QL.reduce((a,r)=>a+r.q*r.m,0),lab=QL.reduce((a,r)=>a+r.q*r.l,0);const sub=mat+lab;const cont=sub*(+$("#qCont").value||0)/100;const disc=+$("#qDisc").value||0;const sst=(lab+cont*(sub?lab/sub:0))*(+$("#qSst").value||0)/100;return{mat,lab,sub,cont,disc,sst,total:sub+cont-disc+sst}}
+function qLoadTemplate(){QL=QTEMPLATE.map(r=>({s:r[0],d:r[1],q:r[2],u:r[3],m:r[4],l:r[5],mc:r[6]||0,lc:r[7]||0}));renderQLines()}
+// the only place quotation maths lives. Sale, cost, profit, margin (profit over sale) and markup (profit over cost), for the whole quotation and per section.
+function qTotals(){const n=id=>+$(id).value||0;
+  const mat=QL.reduce((a,r)=>a+r.q*r.m,0),lab=QL.reduce((a,r)=>a+r.q*r.l,0),matCost=QL.reduce((a,r)=>a+r.q*(r.mc||0),0),labCost=QL.reduce((a,r)=>a+r.q*(r.lc||0),0);
+  const sub=mat+lab,cost=matCost+labCost,cont=sub*n("#qCont")/100,disc=n("#qDisc"),sst=(lab+cont*(sub?lab/sub:0))*n("#qSst")/100,total=sub+cont-disc+sst;
+  const net=sub+cont-disc,profit0=sub+cont-cost,profit=net-cost;
+  const bySec={};QL.forEach(r=>{const s=bySec[r.s]=bySec[r.s]||{name:r.s,sale:0,cost:0};s.sale+=r.q*(r.m+r.l);s.cost+=r.q*((r.mc||0)+(r.lc||0))});
+  const sections=Object.values(bySec).map(s=>({...s,profit:s.sale-s.cost,margin:s.sale?(s.sale-s.cost)/s.sale:0}));
+  return{mat,lab,sub,cont,disc,sst,total,matCost,labCost,cost,net,profit0,profit,margin:net?profit/net:0,markup:cost?profit/cost:0,matShare:sub?mat/sub:0,deposit:total*n("#qDep")/100,target:n("#qTarget")/100,sections}}
+const qLineMargin=r=>{const sale=r.q*(r.m+r.l);return sale?(sale-r.q*((r.mc||0)+(r.lc||0)))/sale:0};
+const qPc=v=>Math.round(v*100)+" percent";
+function qLiveHtml(t){return `<span>Material <b>${fmtRM(t.mat)}</b></span><span>Labour <b>${fmtRM(t.lab)}</b></span><span>Service tax <b>${fmtRM(t.sst)}</b></span><span style="font-size:15px">Total <b>${fmtRM(t.total)}</b></span><span style="font-size:15px;color:var(--${t.margin<t.target?"bad":"ok"})">Profit <b>${fmtRM(t.profit)}</b> (${qPc(t.margin)})</span>`}
 function renderQLines(){
   $("#qLines tbody").innerHTML=QL.map((r,i)=>`<tr>
    <td><select data-i="${i}" data-k="s">${QSECTIONS.map(s=>`<option ${s===r.s?"selected":""}>${s}</option>`).join("")}</select></td>
    <td><input data-i="${i}" data-k="d" value="${esc(r.d)}" style="width:100%"></td>
    <td class="num"><input data-i="${i}" data-k="q" type="number" value="${r.q}" min="0" step="any" style="width:70px;text-align:right"></td>
    <td><input data-i="${i}" data-k="u" value="${esc(r.u)}" style="width:60px"></td>
-   <td class="num"><input data-i="${i}" data-k="m" type="number" value="${r.m}" min="0" step="any" style="width:90px;text-align:right"></td>
-   <td class="num"><input data-i="${i}" data-k="l" type="number" value="${r.l}" min="0" step="any" style="width:90px;text-align:right"></td>
+   <td class="num"><input data-i="${i}" data-k="mc" type="number" value="${r.mc||0}" min="0" step="any" style="width:84px;text-align:right"></td>
+   <td class="num"><input data-i="${i}" data-k="lc" type="number" value="${r.lc||0}" min="0" step="any" style="width:84px;text-align:right"></td>
+   <td class="num"><input data-i="${i}" data-k="m" type="number" value="${r.m}" min="0" step="any" style="width:84px;text-align:right"></td>
+   <td class="num"><input data-i="${i}" data-k="l" type="number" value="${r.l}" min="0" step="any" style="width:84px;text-align:right"></td>
    <td class="num"><b>${fmtRM(r.q*(r.m+r.l))}</b></td>
+   <td class="num" style="color:var(--ink3)">${qPc(qLineMargin(r))}</td>
    <td><button class="btn sm ghost" data-del="${i}" title="Remove line">&times;</button></td></tr>`).join("");
   $("#qLines").querySelectorAll("input,select").forEach(el=>el.style.cssText+=";font:inherit;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)");
   const t=qTotals();
-  $("#qLive").innerHTML=`<span>Material <b>${fmtRM(t.mat)}</b></span><span>Labour <b>${fmtRM(t.lab)}</b></span><span>Service tax <b>${fmtRM(t.sst)}</b></span><span style="font-size:15px">Total <b>${fmtRM(t.total)}</b></span>`;
+  $("#qLive").innerHTML=qLiveHtml(t);
   $("#qNo").textContent=qNumber()+" · "+TODAY.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  renderQAnalysis(t);
 }
-$("#qLines").addEventListener("input",e=>{const el=e.target;if(!el.dataset.k)return;const r=QL[+el.dataset.i];const k=el.dataset.k;r[k]=["q","m","l"].includes(k)?(+el.value||0):el.value;if(["q","m","l"].includes(k)){const t=qTotals();el.closest("tr").children[6].innerHTML=`<b>${fmtRM(r.q*(r.m+r.l))}</b>`;$("#qLive").innerHTML=`<span>Material <b>${fmtRM(t.mat)}</b></span><span>Labour <b>${fmtRM(t.lab)}</b></span><span>Service tax <b>${fmtRM(t.sst)}</b></span><span style="font-size:15px">Total <b>${fmtRM(t.total)}</b></span>`}});
+// the analysis panel, SEMBA's eyes only. Never printed, never on the PDF, never on the client page.
+function renderQAnalysis(t){
+  t=t||qTotals();const under=v=>v<t.target;
+  const tiles=[
+    ["Profit after discount",fmtRM(t.profit),`${qPc(t.margin)} margin, ${qPc(t.markup)} markup on cost`,under(t.margin)?"bad":"ok"],
+    ["Profit before discount",fmtRM(t.profit0),t.disc?`The discount of ${fmtRM(t.disc)} costs ${fmtRM(t.profit0-t.profit)} of profit`:"No discount on this quotation",""],
+    ["Material and labour",`${qPc(t.matShare)} / ${qPc(1-t.matShare)}`,`Service tax ${fmtRM(t.sst)} lands on labour only and is passed to the client, not profit`,""],
+    ["Deposit against material cost",fmtRM(t.deposit),t.matCost?`${qPc(t.deposit/t.matCost)} of the ${fmtRM(t.matCost)} SEMBA pays for materials`:"No material cost entered",t.deposit<t.matCost?"warn":"ok"]];
+  const secs=t.sections.slice().sort((a,b)=>a.margin-b.margin);
+  const low=secs.filter(s=>under(s.margin));
+  $("#qAnalysisBody").innerHTML=`
+    <div class="grid kpis">${tiles.map(([l,v,d,c])=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${esc(d)}</div></div>`).join("")}</div>
+    <p class="sub" style="font-size:12.5px;margin:14px 0 8px">${low.length?`${low.length===1?"One section is":low.length+" sections are"} under the ${qPc(t.target)} target margin. Weakest first.`:`Every section is at or above the ${qPc(t.target)} target margin. Weakest first.`} Margin is profit as a share of the sale. Markup is profit as a share of cost. Contingency counts as sale, it is SEMBA's if nothing goes wrong.</p>
+    <div class="tw"><table><thead><tr><th>Section</th><th class="num">Cost</th><th class="num">Sale</th><th class="num">Profit</th><th class="num">Margin</th></tr></thead><tbody>${secs.map(s=>`<tr><td>${esc(s.name)}</td><td class="num">${fmtRM(s.cost)}</td><td class="num">${fmtRM(s.sale)}</td><td class="num">${fmtRM(s.profit)}</td><td class="num"><span class="pill ${under(s.margin)?"bad":"ok"}">${qPc(s.margin)}</span></td></tr>`).join("")}<tr><td><b>All lines</b></td><td class="num"><b>${fmtRM(t.cost)}</b></td><td class="num"><b>${fmtRM(t.sub)}</b></td><td class="num"><b>${fmtRM(t.sub-t.cost)}</b></td><td class="num"><b>${qPc(t.sub?(t.sub-t.cost)/t.sub:0)}</b></td></tr></tbody></table></div>`;
+}
+$("#qLines").addEventListener("input",e=>{const el=e.target;if(!el.dataset.k)return;const r=QL[+el.dataset.i];const k=el.dataset.k,num=["q","m","l","mc","lc"];r[k]=num.includes(k)?(+el.value||0):el.value;
+  if(!num.includes(k))return;
+  const tr=el.closest("tr");
+  // a cost sets the selling rate from the markup. The rate can still be overtyped afterwards.
+  if(k==="mc"||k==="lc"){const rk=k==="mc"?"m":"l",mk=1+(+$("#qMarkup").value||0)/100;r[rk]=Math.round(r[k]*mk*100)/100;tr.querySelector(`[data-k=${rk}]`).value=r[rk]}
+  const t=qTotals();tr.children[8].innerHTML=`<b>${fmtRM(r.q*(r.m+r.l))}</b>`;tr.children[9].textContent=qPc(qLineMargin(r));$("#qLive").innerHTML=qLiveHtml(t);renderQAnalysis(t)});
 $("#qLines").addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(b){QL.splice(+b.dataset.del,1);renderQLines()}});
-$("#qForm").addEventListener("input",e=>{if(["qCont","qDisc","qSst"].includes(e.target.id))renderQLines()});
-$("#btnQuoteAdd").onclick=()=>{QL.push({s:QSECTIONS[0],d:"",q:1,u:"lot",m:0,l:0});renderQLines();const last=$("#qLines tbody tr:last-child input[data-k=d]");last&&last.focus()};
+$("#qForm").addEventListener("input",e=>{if(["qCont","qDisc","qSst","qDep","qTarget"].includes(e.target.id))renderQLines()});
+$("#btnQuoteAdd").onclick=()=>{QL.push({s:QSECTIONS[0],d:"",q:1,u:"lot",m:0,l:0,mc:0,lc:0});renderQLines();const last=$("#qLines tbody tr:last-child input[data-k=d]");last&&last.focus()};
 $("#btnQuoteTemplate").onclick=()=>{qLoadTemplate();toast("Standard template loaded")};
 function qFillProjects(){$("#qProj").innerHTML=P.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");qProjPick()}
 function qProjPick(){const p=pj($("#qProj").value);if(!p)return;$("#qClient").value=p.client.split(", ")[1]||p.client;$("#qAttn").value=p.client.split(",")[0];$("#qSite").value=p.venue;const a=(p.kind.match(/([\d,]+) sq ft/)||[])[1];$("#qArea").value=a?a.replace(",",""):""}
@@ -863,7 +902,7 @@ $("#btnQuoteGen").onclick=()=>{
   $("#btnQuoteCopy").onclick=()=>{const txt=$("#qPaper").innerText;navigator.clipboard?.writeText(txt).then(()=>toast("Quotation copied as text")).catch(()=>toast("Select the quotation and copy"))};
   $("#btnQuotePrint").onclick=()=>window.print();
   $("#btnQuoteIssue").onclick=e=>{const p=pj($("#qProj").value);e.currentTarget.disabled=true;e.currentTarget.textContent="Issued";if(p){const at=new Date().toISOString(),said="Quotation "+qNumber()+" issued, "+fmtRM(t.total)+", valid "+$("#qValid").value+" days.";p.budget=Math.round(t.total);p.thread.push(["pm",TEAM[p.pm].n,stamp(at),said]);
-    const quote={no:qNumber(),proj:p.id,at,total:p.budget,status:"Issued",by:$("#qBy").value,client:$("#qClient").value,attn:$("#qAttn").value,site:$("#qSite").value,area:$("#qArea").value,valid:$("#qValid").value,weeks:$("#qDur").value,contingency:$("#qCont").value,discount:$("#qDisc").value,serviceTax:$("#qSst").value,deposit:$("#qDep").value,lines:QL.map(r=>({...r}))};
+    const quote={no:qNumber(),proj:p.id,at,total:p.budget,status:"Issued",by:$("#qBy").value,client:$("#qClient").value,attn:$("#qAttn").value,site:$("#qSite").value,area:$("#qArea").value,valid:$("#qValid").value,weeks:$("#qDur").value,contingency:$("#qCont").value,discount:$("#qDisc").value,serviceTax:$("#qSst").value,deposit:$("#qDep").value,markup:$("#qMarkup").value,targetMargin:$("#qTarget").value,cost:Math.round(t.cost),profit:Math.round(t.profit),margin:t.margin,lines:QL.map(r=>({...r}))};
     keep("quotes",quote);keep("posts",{proj:p.id,role:"pm",name:TEAM[p.pm].n,at,text:said});if(SERVER)qFilePdf(quote,p)}QSEQ++;renderQLines();renderQReg();renderOverview();toast("Filed to "+(p?p.name:"project")+" as contract sum. Next number ready.")};
   $("#qDoc").scrollIntoView({behavior:"smooth",block:"start"});
 };
@@ -879,7 +918,7 @@ function renderQReg(){
   const list=STATE.quotes.slice().reverse();
   $("#qRegCount").textContent=list.length?list.length+" issued":"None yet";
   $("#qRegBody").innerHTML=list.map(q=>{const p=pj(q.proj),st=q.status||"Issued",file=q.pdf?q.pdf.split(/[\\/]/).pop():"";
-    return `<tr><td><b>${esc(q.no)}</b></td><td>${p?`<a href="#" data-open="${p.id}" style="color:var(--blue2);font-weight:700;text-decoration:none">${esc(p.name)}</a>`:"(project removed)"}</td><td>${fmtD(q.at)}</td><td class="num"><b>${fmtRM(+q.total||0)}</b></td><td><span class="pill ${st==="Accepted"?"ok":st==="Declined"?"grey":"blue"}">${esc(st)}</span></td><td style="max-width:30ch;font-size:12px;color:var(--ink2)">${file?`<span title="${esc(q.pdf)}">${esc(file)}</span>`:`<span class="pill ${q.pdfError?"bad":"grey"}" title="${esc(q.pdfError||"Start the local server to save PDFs.")}">Not saved</span>`}</td><td>${st==="Issued"?`<div style="display:flex;gap:4px"><button class="btn sm" data-qstatus="Accepted" data-no="${esc(q.no)}">Accepted</button><button class="btn sm ghost" data-qstatus="Declined" data-no="${esc(q.no)}">Declined</button></div>`:""}</td></tr>`}).join("")||`<tr><td colspan="7" class="sub">Nothing issued yet. Generate a quotation above, then press Issue and file to project.</td></tr>`;
+    return `<tr><td><b>${esc(q.no)}</b></td><td>${p?`<a href="#" data-open="${p.id}" style="color:var(--blue2);font-weight:700;text-decoration:none">${esc(p.name)}</a>`:"(project removed)"}</td><td>${fmtD(q.at)}</td><td class="num"><b>${fmtRM(+q.total||0)}</b></td><td class="num">${q.margin==null?"":qPc(+q.margin)}</td><td><span class="pill ${st==="Accepted"?"ok":st==="Declined"?"grey":"blue"}">${esc(st)}</span></td><td style="max-width:30ch;font-size:12px;color:var(--ink2)">${file?`<span title="${esc(q.pdf)}">${esc(file)}</span>`:`<span class="pill ${q.pdfError?"bad":"grey"}" title="${esc(q.pdfError||"Start the local server to save PDFs.")}">Not saved</span>`}</td><td>${st==="Issued"?`<div style="display:flex;gap:4px"><button class="btn sm" data-qstatus="Accepted" data-no="${esc(q.no)}">Accepted</button><button class="btn sm ghost" data-qstatus="Declined" data-no="${esc(q.no)}">Declined</button></div>`:""}</td></tr>`}).join("")||`<tr><td colspan="8" class="sub">Nothing issued yet. Generate a quotation above, then press Issue and file to project.</td></tr>`;
 }
 $("#qReg").addEventListener("click",e=>{const b=e.target.closest("[data-qstatus]");if(!b)return;const q=STATE.quotes.find(x=>x.no===b.dataset.no);if(!q)return;q.status=b.dataset.qstatus;if(STORE)saveState();renderQReg();toast("Quotation "+q.no+" marked "+q.status.toLowerCase()+".")});
 
