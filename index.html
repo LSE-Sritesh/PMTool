@@ -166,8 +166,8 @@ tr:last-child td{border-bottom:0}
 .field label{font-size:11.5px;font-weight:700;color:var(--ink2);display:block;margin-bottom:3px}
 /* assistant */
 /* assistant, a chat with a project list beside it */
-.chat{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:start}
-.chat .side{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px;position:sticky;top:16px}
+.chat{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:stretch}
+.chat .side{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px}
 .chat .side .eyebrow{padding:12px 10px 4px}
 .chat .side button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:8px 10px;cursor:pointer;font-weight:600;color:var(--ink2)}
 .chat .side button small{display:block;font-weight:500;color:var(--ink3);font-size:11.5px}
@@ -181,9 +181,8 @@ tr:last-child td{border-bottom:0}
 .chat .reply b{display:block;margin-bottom:4px}
 .chat .reply small{display:block;margin-top:8px;font-size:11.5px;color:var(--ink3)}
 .chat .chips{display:flex;gap:6px;flex-wrap:wrap;padding:8px 18px}
-.chat .ask{display:flex;gap:8px;padding:10px 18px 12px;border-top:1px solid var(--line)}
+.chat .ask{display:flex;gap:8px;padding:10px 18px 16px;border-top:1px solid var(--line)}
 .chat .ask input{flex:1;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);min-width:0}
-.chat .foot{padding:0 18px 12px;font-size:11.5px;color:var(--ink3)}
 .note{background:var(--bluewash);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--ink);border:1px solid transparent}
 .note b{color:var(--blue2)}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--navy);color:var(--onfill);padding:10px 16px;border-radius:99px;font-weight:700;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
@@ -372,7 +371,7 @@ tr:last-child td{border-bottom:0}
     <!-- ASSISTANT -->
     <section class="view" id="v-assistant">
       <div class="topbar">
-        <div><div class="eyebrow">On top of the data</div><h1 class="title">Assistant</h1><div class="sub">Pick a project on the left and ask about it. Answers are written by rules from the live data in this tool, so they change as the data changes. No AI model runs here and nothing leaves this laptop.</div></div>
+        <div><div class="eyebrow">On top of the data</div><h1 class="title">Assistant</h1></div>
       </div>
       <div class="chat">
         <div class="side" id="chatSide"></div>
@@ -380,7 +379,6 @@ tr:last-child td{border-bottom:0}
           <div class="msgs" id="chatLog"></div>
           <div class="chips" id="chatChips"></div>
           <form class="ask" id="chatAsk"><input id="chatQ" placeholder="Ask about this project" autocomplete="off"><button class="btn primary" type="submit">Send</button></form>
-          <div class="foot">Written by rules from the live data, not by a model. Each answer says what it was built from.</div>
         </div>
       </div>
     </section>
