@@ -845,7 +845,7 @@ function renderQAnalysis(t){
   const tiles=[
     ["Profit after discount",fmtRM(t.profit),`${qPc(t.margin)} margin, ${qPc(t.markup)} markup on cost`,under(t.margin)?"bad":"ok"],
     ["Profit before discount",fmtRM(t.profit0),t.disc?`The discount of ${fmtRM(t.disc)} costs ${fmtRM(t.profit0-t.profit)} of profit`:"No discount on this quotation",""],
-    ["Material and labour",`${qPc(t.matShare)} / ${qPc(1-t.matShare)}`,`Service tax ${fmtRM(t.sst)} lands on labour only and is passed to the client, not profit`,""],
+    ["Material against labour",`${Math.round(t.matShare*100)} / ${Math.round((1-t.matShare)*100)}`,`Percent of the sale. Service tax ${fmtRM(t.sst)} lands on labour only and is passed to the client, not profit`,""],
     ["Deposit against material cost",fmtRM(t.deposit),t.matCost?`${qPc(t.deposit/t.matCost)} of the ${fmtRM(t.matCost)} SEMBA pays for materials`:"No material cost entered",t.deposit<t.matCost?"warn":"ok"]];
   const secs=t.sections.slice().sort((a,b)=>a.margin-b.margin);
   const low=secs.filter(s=>under(s.margin));
