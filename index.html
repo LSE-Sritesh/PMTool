@@ -165,14 +165,25 @@ tr:last-child td{border-bottom:0}
 .field .full{grid-column:1/-1}
 .field label{font-size:11.5px;font-weight:700;color:var(--ink2);display:block;margin-bottom:3px}
 /* assistant */
-.ai{grid-template-columns:1fr 1.3fr}
-.prompts{display:flex;flex-direction:column;gap:8px}
-.prompt{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;font-weight:600}
-.prompt:hover,.prompt.on{border-color:var(--blue);background:var(--bluewash)}
-.prompt small{display:block;color:var(--ink3);font-weight:500;margin-top:2px}
-.out{min-height:280px;white-space:pre-wrap;line-height:1.55;font-size:13.5px}
-.out h4{margin:0 0 6px;font-size:14px}
-.out .src{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12px;color:var(--ink3)}
+/* assistant, a chat with a project list beside it */
+.chat{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:start}
+.chat .side{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px;position:sticky;top:16px}
+.chat .side .eyebrow{padding:12px 10px 4px}
+.chat .side button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:8px 10px;cursor:pointer;font-weight:600;color:var(--ink2)}
+.chat .side button small{display:block;font-weight:500;color:var(--ink3);font-size:11.5px}
+.chat .side button:hover{background:var(--bg)}
+.chat .side button.on{background:var(--bluewash);color:var(--blue2)}
+.chat .main{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:70vh}
+.chat .msgs{flex:1;padding:18px 18px 6px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:62vh}
+.chat .bub{max-width:76ch;padding:10px 14px;border-radius:12px;white-space:pre-wrap;line-height:1.55;font-size:13.5px}
+.chat .me{align-self:flex-end;background:var(--navy);color:var(--onfill);border-bottom-right-radius:4px}
+.chat .reply{align-self:flex-start;background:var(--bg);color:var(--ink);border-bottom-left-radius:4px}
+.chat .reply b{display:block;margin-bottom:4px}
+.chat .reply small{display:block;margin-top:8px;font-size:11.5px;color:var(--ink3)}
+.chat .chips{display:flex;gap:6px;flex-wrap:wrap;padding:8px 18px}
+.chat .ask{display:flex;gap:8px;padding:10px 18px 12px;border-top:1px solid var(--line)}
+.chat .ask input{flex:1;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);min-width:0}
+.chat .foot{padding:0 18px 12px;font-size:11.5px;color:var(--ink3)}
 .note{background:var(--bluewash);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--ink);border:1px solid transparent}
 .note b{color:var(--blue2)}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--navy);color:var(--onfill);padding:10px 16px;border-radius:99px;font-weight:700;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
@@ -189,7 +200,11 @@ tr:last-child td{border-bottom:0}
   .nav button span.tx{display:none}
   .railfoot{display:none}
   .main{padding:16px 16px 32px}
-  .two,.three,.ai{grid-template-columns:1fr}
+  .two,.three,.chat{grid-template-columns:1fr}
+  .chat .side{position:static;display:flex;gap:4px;overflow-x:auto;padding:6px}
+  .chat .side .eyebrow,.chat .side button small{display:none}
+  .chat .side button{width:auto;white-space:nowrap;padding:7px 10px}
+  .chat .main{min-height:60vh}
   .stepper{grid-template-columns:repeat(4,1fr)}
   .field{grid-template-columns:1fr}
   .title{font-size:24px}
@@ -357,17 +372,15 @@ tr:last-child td{border-bottom:0}
     <!-- ASSISTANT -->
     <section class="view" id="v-assistant">
       <div class="topbar">
-        <div><div class="eyebrow">On top of the data</div><h1 class="title">Assistant</h1><div class="sub">Pick a task or ask a question. Every answer is written by rules from the live data in this tool, so it changes as the data changes. No AI model runs here and nothing leaves this laptop. The course shows how a model does the same job in plain language.</div></div>
+        <div><div class="eyebrow">On top of the data</div><h1 class="title">Assistant</h1><div class="sub">Pick a project on the left and ask about it. Answers are written by rules from the live data in this tool, so they change as the data changes. No AI model runs here and nothing leaves this laptop.</div></div>
       </div>
-      <div class="grid ai">
-        <div class="prompts" id="prompts">
-          <div class="panel"><div class="bd field" style="grid-template-columns:1fr 100px"><div><label for="aiProj">Project for the first two tasks</label><select id="aiProj" style="width:100%"></select></div><div><label for="aiDays">Delay, days</label><input id="aiDays" type="number" value="5" min="1" max="60" style="width:100%"></div></div></div>
-          <div class="prompts" id="aiTasks"></div>
-          <form class="compose" id="aiAsk" style="margin-top:4px"><input id="aiQ" placeholder="Ask, like what is overdue, or how is Kissa Roku doing"><button class="btn primary" type="submit">Ask</button></form>
-        </div>
-        <div>
-          <div class="panel"><div class="hd"><h3 id="outTitle">Pick a task on the left</h3><button class="btn sm" id="btnCopy" hidden>Copy</button></div><div class="bd out" id="out">Each task reads the same project data the rest of this tool shows. Nothing is typed twice.</div></div>
-          <div class="note" style="margin-top:14px"><b>Why this matters for the course.</b> Every task on the left is a set of rules plus the right data. A model does the same job in plain language, and handles the questions the rules do not know. Day 1 teaches the prompt. Day 2 teaches how to hand it a project file, a site log or an approval list, and how to turn it into an agent that runs on its own instruction. Wiring a model into a live system like this one is the part that needs a builder, and a decision on whose account pays for it.</div>
+      <div class="chat">
+        <div class="side" id="chatSide"></div>
+        <div class="main">
+          <div class="msgs" id="chatLog"></div>
+          <div class="chips" id="chatChips"></div>
+          <form class="ask" id="chatAsk"><input id="chatQ" placeholder="Ask about this project" autocomplete="off"><button class="btn primary" type="submit">Send</button></form>
+          <div class="foot">Written by rules from the live data, not by a model. Each answer says what it was built from.</div>
         </div>
       </div>
     </section>
@@ -499,10 +512,9 @@ function renderOverview(){
   const live=P.filter(p=>p.phase<7).length, risk=P.filter(p=>p.status==="bad"||p.status==="warn").length;
   const openAppr=APPR.filter(a=>a.state==="open"), ours=openAppr.filter(a=>a.side==="ours").length;
   const due=openAppr.filter(a=>a.type==="Progress claim"&&a.days>0), claims=due.reduce((s,a)=>s+(a.amount||0),0);
-  const dueText=!due.length?"None overdue":due.length===1?pj(due[0].proj).name.split(" ")[0]+", "+due[0].item.split(",")[0].replace(/^Progress /,"")+", "+due[0].days+" days":due.length+" claims, oldest "+Math.max(...due.map(a=>a.days))+" days";
   const pl=(n,w)=>n+" "+w+(n===1?"":"s"), tl=todayLog(), coords=new Set(tl.map(l=>l.who)).size, sites=new Set(tl.map(l=>l.proj)).size;
   $("#kpis").innerHTML=[
-    ["Live projects",live,"of "+P.length+" in portfolio","blue"],["At risk",risk,"need a decision this week",risk?"bad":"ok"],["Approvals waiting",openAppr.length,ours+" waiting on SEMBA",""],["Claims overdue",fmtRM(claims).replace("RM ","RM&nbsp;"),esc(dueText),due.length?"warn":"ok"],["Site check-ins today",tl.length,pl(coords,"coordinator")+", "+pl(sites,"site"),"ok"]
+    ["Live projects",live,"of "+P.length+" in portfolio","blue"],["At risk",risk,"need a decision this week",risk?"bad":"ok"],["Approvals waiting",openAppr.length,ours+" waiting on SEMBA",""],["Claims overdue",fmtRM(claims).replace("RM ","RM&nbsp;"),"",due.length?"warn":"ok"],["Site check-ins today",tl.length,pl(coords,"coordinator")+", "+pl(sites,"site"),"ok"]
   ].map(([l,v,d,c])=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
   $("#nProj").textContent=live;$("#nAppr").textContent=openAppr.length;
   const att=[];
@@ -723,20 +735,50 @@ function aiAsk(q){
   if(/open|launch|handover|when/.test(s))return aiOpenings();
   return{title:"Try one of these",text:"The rules here know a fixed set of questions.\n\n1. What is overdue\n2. What is waiting on approval\n3. What happened on site today\n4. Which clients have gone quiet\n5. Where is the money\n6. When does each project open\n7. A project by name, like how is Kissa Roku doing",src:"A model would take any question. These rules take the ones above."};
 }
-const TASKS=[
- {t:"Draft this week's client update",s:"For the project chosen above. Reads the thread, milestones, site log and approvals",run:()=>aiUpdate(aiProj())},
- {t:"What slips if the wait goes on",s:"Shifts every open milestone by the delay days above",run:()=>aiDelay(aiProj(),Math.max(1,+$("#aiDays").value||5))},
- {t:"Summarise today's site check-ins",s:"Flagged items first, then headcount",run:aiSite},
- {t:"Which clients has sales not spoken to",s:"Checks every live project thread for a sales message",run:aiSales}];
-let aiSel="kissa";
-const aiProj=()=>pj($("#aiProj").value)||P[0];
-function aiShow(r){$("#outTitle").textContent=r.title;$("#out").innerHTML=`<div id="outText">${esc(r.text)}</div><div class="src">Written by rules from the live data, not by a model. ${esc(r.src)}</div>`;$("#btnCopy").hidden=false}
-function renderPrompts(){$("#aiProj").innerHTML=P.map(p=>`<option value="${p.id}"${p.id===aiSel?" selected":""}>${esc(p.name)}</option>`).join("");$("#aiTasks").innerHTML=TASKS.map((p,i)=>`<button class="prompt" data-p="${i}">${p.t}<small>${p.s}</small></button>`).join("")}
-$("#aiProj").addEventListener("change",()=>{aiSel=$("#aiProj").value;const on=document.querySelector(".prompt.on");if(on)aiShow(TASKS[+on.dataset.p].run())});
-$("#aiDays").addEventListener("input",()=>{const on=document.querySelector(".prompt.on");if(on&&on.dataset.p==="1")aiShow(TASKS[1].run())});
-$("#aiTasks").addEventListener("click",e=>{const b=e.target.closest(".prompt");if(!b)return;document.querySelectorAll(".prompt").forEach(x=>x.classList.toggle("on",x===b));aiShow(TASKS[+b.dataset.p].run())});
-$("#aiAsk").onsubmit=e=>{e.preventDefault();const q=$("#aiQ").value.trim();if(!q)return;document.querySelectorAll(".prompt").forEach(x=>x.classList.remove("on"));aiShow(aiAsk(q))};
-$("#btnCopy").onclick=()=>{const t=$("#outText")?.innerText||"";navigator.clipboard?.writeText(t).then(()=>toast("Copied")).catch(()=>{const r=document.createRange();r.selectNodeContents($("#outText"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Select and copy")})};
+// answers about one project
+function aiOverdueP(p){const late=p.milestones.filter(m=>m[2]==="late").map(([t,d])=>`${t}, due ${aiL(d)}, ${aiN(daysBetween(d,TODAY),"day")} late.`),appr=aiOpen(p).filter(a=>a.days>=7).map(a=>`${a.item}, with ${a.on}, ${aiN(a.days,"day")}.${a.impact?" "+a.impact:""}`);
+  return{title:`Overdue on ${p.name}`,text:[late.length?`${aiN(late.length,"milestone")} overdue.`:"No milestone is overdue.","",...late,"",appr.length?`${aiN(appr.length,"approval")} waiting a week or more.`:"No approval has waited a week.","",...appr].join("\n").replace(/\n{3,}/g,"\n\n").trim(),src:`Built from the milestones and approvals of ${p.name}.`}}
+function aiApprovalsP(p){const open=aiOpen(p).sort((a,b)=>b.days-a.days);return{title:`Approvals on ${p.name}`,text:open.length?open.map(a=>`${a.item}. With ${a.on}, ${aiN(a.days,"day")}.${a.impact?" "+a.impact:""}`).join("\n\n"):"Nothing is waiting on anyone for this project.",src:`Built from the approvals queue, ${aiN(open.length,"open item")}.`}}
+function aiSnags(p){const o=p.snags.filter(s=>s[1]==="open"),c=p.snags.filter(s=>s[1]!=="open");return{title:`Snags on ${p.name}`,text:p.snags.length?[`${aiN(o.length,"snag")} open, ${c.length} fixed.`,"",...o.map(s=>"Open. "+s[0]),...c.map(s=>"Fixed. "+s[0])].join("\n"):"No snags recorded. The snag list opens at practical completion.",src:`Built from the snag list of ${p.name}.`}}
+function aiSiteP(p){const logs=LOG.filter(l=>l.proj===p.id).slice(-3).reverse();return{title:`Site check-ins, ${p.name}`,text:logs.length?logs.map(l=>`${TEAM[l.who].n}, ${l.day&&l.day!==dayKey(TODAY)?fmtD(l.day)+" ":""}${l.time}${l.flag?" ("+(l.flag==="bad"?"blocking":"needs a decision")+")":""}. ${l.note}${l.photos?" "+aiN(l.photos,"photo")+".":""}`).join("\n\n"):"No site check-ins yet for this project.",src:`Built from the last ${aiN(logs.length,"check-in")} on ${p.name}.`}}
+function aiMoneyP(p){const vos=p.vos.map(([r,d,a,s])=>`${r}, ${d}, ${fmtRM(+a)}, ${String(s).toLowerCase()}.`),claims=aiOpen(p).filter(a=>a.type==="Progress claim");return{title:`Money on ${p.name}`,text:[`Contract sum ${fmtRM(p.budget)}.`,`Claimed to date ${fmtRM(p.claimed)}, ${p.budget?Math.round(p.claimed/p.budget*100):0} percent of the contract.`,`Committed to subcontractors ${fmtRM(p.committed)}. Uncommitted ${fmtRM(p.budget-p.committed)}.`,`Approved variations ${fmtRM(p.vo)}.`,"",vos.length?"Variations.":"No variations yet.",...vos,"",claims.length?"Claims waiting. "+claims.map(a=>`${a.item}, ${aiN(a.days,"day")}.`).join(" "):"No progress claim is waiting."].join("\n"),src:`Built from the money fields, variations and claims of ${p.name}.`}}
+function aiMilestones(p){const dl=daysBetween(TODAY,p.open);return{title:`Dates for ${p.name}`,text:[`${PHASES[p.phase]} phase now. ${dl>=0?`Opens ${aiW(p.open)}, in ${aiN(dl,"day")}.`:`Opened ${aiW(p.open)}, ${aiN(-dl,"day")} ago.`}`,"",...p.milestones.map(([t,d,s])=>`${s==="done"?"Done":s==="late"?"Overdue":"Due"}. ${t}, ${aiL(d)}.`),"","Phases planned.",...PHASES.filter(ph=>p.plan[ph]).map(ph=>`${ph}, ${fmtD(p.plan[ph][0])} to ${fmtD(p.plan[ph][1])}.`)].join("\n"),src:`Built from the milestones and phase plan of ${p.name}.`}}
+function aiTeam(p){return{title:`Team on ${p.name}`,text:[...["pm","sales","qs","design","site"].filter(k=>p[k]).map(k=>`${TEAM[p[k]].r}. ${TEAM[p[k]].n}.`),`Client. ${p.client}.`].join("\n"),src:`Built from the team roster of ${p.name}.`}}
+function aiThread(p){const t=p.thread.slice(-5).reverse();return{title:`Latest in the ${p.name} thread`,text:t.length?t.map(([r,w,tm,m])=>`${w} (${tm}). ${m}`).join("\n\n"):"No messages yet.",src:`Built from the last ${aiN(t.length,"message")} of ${aiN(p.thread.length,"message")}.`}}
+function aiAskProject(q,p){
+  const s=q.toLowerCase();
+  if(/thread|message|said|conversation|talk/.test(s))return aiThread(p);
+  if(/update|letter|email|week|write|draft/.test(s))return aiUpdate(p);
+  if(/slip|delay|wait goes|if the|longer|more day/.test(s))return aiDelay(p,5);
+  if(/overdue|late|behind/.test(s))return aiOverdueP(p);
+  if(/approv|waiting|sign/.test(s))return aiApprovalsP(p);
+  if(/snag|defect|fix/.test(s))return aiSnags(p);
+  if(/site|check|photo|worker|headcount/.test(s))return aiSiteP(p);
+  if(/money|claim|contract|budget|paid|invoice|quot|cash|cost|variation/.test(s))return aiMoneyP(p);
+  if(/milestone|open|launch|when|date|handover|phase|programme|schedule|plan/.test(s))return aiMilestones(p);
+  if(/team|who|manager|sales|designer|coordinator|surveyor/.test(s))return aiTeam(p);
+  return aiStatus(p);
+}
+
+// ---------- assistant chat, one thread per project, kept while the page is open ----------
+let chatSel="kissa";const CHAT={};
+const chatChips=p=>p?["How is it doing","What is overdue","What is waiting on approval","Where is the money","Draft this week's client update","What slips if the wait goes on","Latest site check-ins","Snags"]:["What is overdue","What is waiting on approval","What happened on site today","Which clients has sales not spoken to","Where is the money","When does each project open"];
+function renderAssistant(){
+  if(chatSel!=="all"&&!pj(chatSel))chatSel="all";
+  const act=P.filter(p=>p.phase<6),done=P.filter(p=>p.phase>=6),p=chatSel==="all"?null:pj(chatSel);
+  const row=x=>`<button type="button" data-c="${x.id}" class="${chatSel===x.id?"on":""}">${esc(x.name)}<small>${PHASES[x.phase]}</small></button>`;
+  $("#chatSide").innerHTML=`<button type="button" data-c="all" class="${chatSel==="all"?"on":""}">All projects<small>Across the portfolio</small></button><div class="eyebrow">Active</div>${act.map(row).join("")||'<div class="sub" style="padding:4px 10px">None</div>'}<div class="eyebrow">Completed</div>${done.map(row).join("")||'<div class="sub" style="padding:4px 10px">None yet</div>'}`;
+  $("#chatQ").placeholder=p?"Ask about "+p.name:"Ask about all projects";
+  $("#chatChips").innerHTML=chatChips(p).map(c=>`<button class="chip" type="button" data-q="${esc(c)}">${esc(c)}</button>`).join("");
+  const log=CHAT[chatSel]||(CHAT[chatSel]=[]);
+  const hello={role:"reply",title:p?"Ask me about "+p.name:"Ask me about all projects",text:p?"I know this project's phase, milestones, approvals, money, snags, site check-ins and thread. Try a question below, or type your own.":"I can answer across every project. Overdue items, approvals, today's site check-ins, quiet clients, money and opening dates. Pick a project on the left to go deeper.",src:""};
+  $("#chatLog").innerHTML=(log.length?log:[hello]).map(m=>m.role==="me"?`<div class="bub me">${esc(m.text)}</div>`:`<div class="bub reply"><b>${esc(m.title)}</b>${esc(m.text)}${m.src?`<small>${esc(m.src)}</small>`:""}</div>`).join("");
+  const l=$("#chatLog");l.scrollTop=l.scrollHeight;
+}
+function chatSend(q){const p=chatSel==="all"?null:pj(chatSel),log=CHAT[chatSel]||(CHAT[chatSel]=[]);log.push({role:"me",text:q});log.push({role:"reply",...(p?aiAskProject(q,p):aiAsk(q))});renderAssistant()}
+$("#chatSide").addEventListener("click",e=>{const b=e.target.closest("[data-c]");if(!b)return;chatSel=b.dataset.c;renderAssistant();$("#chatQ").focus()});
+$("#chatChips").addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(b)chatSend(b.dataset.q)});
+$("#chatAsk").onsubmit=e=>{e.preventDefault();const q=$("#chatQ").value.trim();if(!q)return;$("#chatQ").value="";chatSend(q)};
 
 // ---------- quotation ----------
 const SEMBA={name:"SEMBA Malaysia Design & Construction Sdn. Bhd.",addr:"Unit A2-8-1 & A2-8-2, SOHO Suites, No. 20, Jalan Perak, 50450 Kuala Lumpur",tel:"+603 2181 0585"};
@@ -877,7 +919,7 @@ $("#cForm").onsubmit=async e=>{e.preventDefault();
     <div class="eyebrow" style="margin-bottom:4px">Windows</div><pre style="margin:0 0 10px;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cWin">${esc(win)}</pre>
     <div class="eyebrow" style="margin-bottom:4px">Mac</div><pre style="margin:0;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:8px 10px;border-radius:6px" id="cMac">${esc(mac)}</pre>`}</div></div>`;
   $("#btnCopyTree").hidden=!!made;$("#btnCopyTree").onclick=()=>{navigator.clipboard?.writeText(win+"\n"+mac).then(()=>toast("Commands copied")).catch(()=>toast("Select and copy the commands"))};
-  CSEQ++;renderOverview();renderCards("#projCards","all");renderGantt();qFillProjects();renderPrompts();$("#cForm").reset();setTimeout(cTree,0);toast(made?"Client and folders created":"Client created and added to projects");
+  CSEQ++;renderOverview();renderCards("#projCards","all");renderGantt();qFillProjects();renderAssistant();$("#cForm").reset();setTimeout(cTree,0);toast(made?"Client and folders created":"Client created and added to projects");
 };
 
 // ---------- local server, optional (PRD 7.1) ----------
@@ -902,7 +944,7 @@ function applyState(s){
   STATE.apprDone.forEach(id=>{const a=APPR.find(x=>x.id==id);if(a)a.state="done"});
   STATE.snagsFixed.forEach(f=>{const p=pj(f.proj),g=p&&p.snags.find(x=>x[0]===f.title);if(g)g[1]="closed"});
   STATE.quotes.forEach(q=>{const p=pj(q.proj);if(p)p.budget=+q.total||0;const m=/^SMQ-(\d{4})-(\d+)$/.exec(q.no||"");if(m&&+m[1]===year)QSEQ=Math.max(QSEQ,+m[2]+1)});
-  renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();qFillProjects();renderQLines();renderQReg();renderPrompts();cTree();
+  renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();qFillProjects();renderQLines();renderQReg();renderAssistant();cTree();
 }
 async function loadState(){try{const r=await fetch("/api/state");const j=await r.json();if(r.ok&&j.ok){REV=j.rev;STORE=true;applyState(j.state);saveMark(true);$("#btnClearSaved").hidden=false;pushClientViews()}else saveMark(false,j.error)}catch(e){saveMark(false)}}
 $("#btnClearSaved").onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="Click again to clear";b._x=setTimeout(()=>{delete b.dataset.sure;b.textContent="Clear saved changes"},4000);return}clearTimeout(b._x);STATE=noState();saveState().then(()=>{if(SAVED)location.reload()})};
@@ -931,7 +973,7 @@ async function shareClient(p){
 
 // ---------- boot ----------
 qLoadTemplate();qFillProjects();renderQReg();cTree();
-renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();renderPrompts();serverCheck();
+renderOverview();renderCards("#projCards","all");renderGantt();renderSite();renderAppr();renderAssistant();serverCheck();
 if(location.hash){const h=location.hash.slice(1);if(["overview","projects","timeline","site","approvals","quote","client","assistant"].includes(h))go(h)}
 </script>
 </body></html>

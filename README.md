@@ -13,7 +13,7 @@ Client page. On a project, press Share client view. You get a link like `http://
 
 Photos. The check-in form takes photos when the server is running. They are shrunk and saved in the client's `06 Site` folder, and shown in the log and on the client page.
 
-Assistant. The four tasks and the Ask box are written by rules that read the live data. No AI model, no key, nothing leaves the laptop. Every answer says so.
+Assistant. Pick a project on the left and ask about it in the chat. Answers are written by rules that read the live data. No AI model, no key, nothing leaves the laptop. Every answer says so.
 
 Quotations. Press Issue and file to project and a PDF is saved in the client's `03 Quotation and BOQ` folder (or in `Clients/Quotations` for a sample project). This uses the Chrome or Edge already on the computer. Print or save as PDF works without the server.
 
