@@ -4,8 +4,14 @@
     {
       "name": "sitebook",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["server.js"],
+      "runtimeArgs": ["PM Tool/server.js"],
       "port": 3000
+    },
+    {
+      "name": "crm",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["-y", "serve", "semba-crm-handoff/semba-crm", "-l", "3100"],
+      "port": 3100
     }
   ]
 }
