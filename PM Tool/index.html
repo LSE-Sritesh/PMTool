@@ -361,7 +361,7 @@ tr:last-child td{border-bottom:0}
           <div><label for="cSource">Came through</label><select id="cSource"><option>Referral</option><option>Mall leasing</option><option>Japan HQ</option><option>Website</option><option>Repeat client</option></select></div>
           <div><label for="cSales">Salesperson</label><select id="cSales"><option value="dan">Daniel</option><option value="priya">Priya</option></select></div>
           <div><label for="cPm">Project manager</label><select id="cPm"><option value="aiman">Aiman</option><option value="mei">Mei Ling</option><option value="hafiz">Hafiz</option></select></div>
-          <div class="full" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="reset">Clear</button><button class="btn primary" type="submit" id="cSubmit">Create client</button></div>
+          <div class="full" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" id="cSample">Fill sample</button><button class="btn" type="reset">Clear</button><button class="btn primary" type="submit" id="cSubmit">Create client</button></div>
         </form></div></div>
         <div>
           <div class="panel"><div class="hd"><h3>Standard folder set</h3><button class="btn sm" id="btnCopyTree" hidden>Copy command</button></div><div class="bd"><pre id="cTree" style="margin:0;font:12.5px/1.6 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;color:var(--ink2)"></pre></div></div>
@@ -933,6 +933,13 @@ function cTree(){const brand=safeName($("#cBrand").value||"New client");const ro
   $("#cTree").textContent=(SERVER?SERVER.clientsRoot:"Clients/")+"\n└─ "+root+"/\n"+FOLDERS.map((f,i)=>"   "+(i===FOLDERS.length-1?"└─ ":"├─ ")+f+"/").join("\n")+"\n   └─ "+root+" project sheet.md";
   return root}
 $("#cForm").addEventListener("input",cTree);$("#cForm").addEventListener("reset",()=>setTimeout(cTree,0));
+// made up clients for a demo, so nothing has to be typed. Each press moves to the next one.
+const CSAMPLES=[
+ {cCompany:"Mochi and Co Sdn Bhd",cBrand:"Mochi House",cPic:"Ms Tee Li Ying",cPhone:"012 555 0142",cEmail:"liying@mochihouse.example",cType:"F&B",cArea:850,cVenue:"The Exchange TRX, Level 2, Lot 14",days:75,cSource:"Referral",cSales:"dan",cPm:"aiman"},
+ {cCompany:"Hikari Eyewear (M) Sdn Bhd",cBrand:"Hikari Eyewear",cPic:"Mr Lau Wei Jian",cPhone:"012 555 0178",cEmail:"weijian@hikarieyewear.example",cType:"Retail",cArea:620,cVenue:"Sunway Velocity Mall, Level 1, Lot 22",days:90,cSource:"Mall leasing",cSales:"priya",cPm:"mei"},
+ {cCompany:"Nami Tea Bar Sdn Bhd",cBrand:"Nami Tea Bar",cPic:"Ms Farhana Aziz",cPhone:"012 555 0116",cEmail:"farhana@namiteabar.example",cType:"Kiosk",cArea:180,cVenue:"Suria KLCC, Concourse Level",days:60,cSource:"Website",cSales:"dan",cPm:"hafiz"}];
+let cSampleAt=0;
+$("#cSample").onclick=()=>{const s=CSAMPLES[cSampleAt++%CSAMPLES.length];Object.keys(s).forEach(k=>{if(k!=="days")$("#"+k).value=s[k]});$("#cOpen").value=dayKey(rel(s.days));cTree();toast("Sample client filled in. Change anything you like, then create.")};
 $("#cForm").onsubmit=async e=>{e.preventDefault();
   const root=cTree();const brand=$("#cBrand").value.trim();const id="c"+CSEQ;
   const open=$("#cOpen").value||shiftISO("2027-01-29");
