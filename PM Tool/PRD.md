@@ -150,7 +150,7 @@ Built 29 September 2026, in `server.js` (`GET` and `PUT /api/state`) and the sav
 Built 30 September 2026. How it works.
 1. Print. A print stylesheet in `index.html` hides everything but the quotation and forces the light colours. Each section of the table is its own group, so a section is not split across pages.
 2. PDF on disk. The server has no add-ons, so it uses the Chrome or Edge already on the computer to print the page with no window showing. `POST /api/quotes/pdf` takes the quotation's HTML, wraps it in the page's own stylesheet, and prints it to A4. Chrome is tried first, then Edge. A different browser can be set with `"browser"` in `sitebook.config.json`. If neither is found the tool says so and the Print button still works.
-3. Where the file goes. `Clients/<code> <brand>/03 Quotation and BOQ/<number> <brand>.pdf` when the client has a folder. Sample projects have no folder, so their PDFs go to `Clients/Quotations/`. A name that already exists gets (2), (3) and so on.
+3. Where the file goes. `Clients/<code> <brand>/03 Quotation and BOQ/<number> <brand>.pdf` when the client has a folder. Sample projects have no folder, so their PDFs go to `Sample projects/Quotations/`, a folder beside `Clients` (moved out of `Clients` on 4 October 2026 so that `Clients` holds real clients only). A name that already exists gets (2), (3) and so on.
 4. Register. Issued quotations are saved with the other changes (7.2), so the number sequence, the totals and the PDF paths survive a reload. Status starts at Issued and can be set to Accepted or Declined.
 5. Not done. Marking a quotation accepted changes nothing else yet. The PDF is made after Issue and file, so a quotation printed before issuing is not on disk.
 
@@ -170,7 +170,7 @@ Replace the photo count with real uploads through the server into `06 Site` of t
 Built 30 September 2026.
 1. The form. A Photos field on the check-in form, off until the local server is found. Takes up to 8 pictures from the camera or gallery.
 2. Size. Each photo is shrunk in the browser to 1600 pixels on the long side and saved as JPEG at 85 percent, so a phone photo of several MB becomes a few hundred KB. Rotation from the phone is kept.
-3. Where. `POST /api/photos`, one photo per request as raw bytes. Saved into the client's `06 Site (photos, daily logs)` folder, or `Clients/Site photos/<project>/` for a sample project. Named with the date, time to the minute, coordinator and a number. JPEG, PNG and WebP are accepted, 15 MB limit.
+3. Where. `POST /api/photos`, one photo per request as raw bytes. Saved into the client's `06 Site (photos, daily logs)` folder, or `Sample projects/Site photos/<project>/` for a sample project. Named with the date, time to the minute, coordinator and a number. JPEG, PNG and WebP are accepted, 15 MB limit.
 4. Showing them. `GET /api/photo?f=<path inside Clients>` serves a photo. Paths outside the clients folder are refused. Thumbnails appear in the site log and on the project's Site log tab, and open full size in a new tab. The client page shows the same photos.
 5. Saved with the check-in. The file paths are kept in the check-in record, so the thumbnails come back after a reload.
 

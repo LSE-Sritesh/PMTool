@@ -909,7 +909,7 @@ $("#btnQuoteGen").onclick=()=>{
   $("#qDoc").scrollIntoView({behavior:"smooth",block:"start"});
 };
 
-// the server prints the quotation to a PDF in the client's 03 folder, or in Clients/Quotations for a sample project
+// the server prints the quotation to a PDF in the client's 03 folder, or in Sample projects/Quotations for a sample project
 async function qFilePdf(q,p){
   try{const r=await fetch("/api/quotes/pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({no:q.no,code:p.code||"",title:p.name,html:$("#qPaper").outerHTML})});const j=await r.json();
     if(r.ok&&j.ok){q.pdf=j.pdf;delete q.pdfError;toast("PDF saved in "+j.where)}else{q.pdfError=j.error||"The PDF was not made.";toast(q.pdfError)}}

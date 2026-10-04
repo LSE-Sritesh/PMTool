@@ -15,6 +15,6 @@ Photos. The check-in form takes photos when the server is running. They are shru
 
 Assistant. Pick a project on the left and ask about it in the chat. Answers are written by rules that read the live data. No AI model, no key, nothing leaves the laptop. Every answer says so.
 
-Quotations. Press Issue and file to project and a PDF is saved in the client's `03 Quotation and BOQ` folder (or in `Clients/Quotations` for a sample project). This uses the Chrome or Edge already on the computer. Print or save as PDF works without the server.
+Quotations. Press Issue and file to project and a PDF is saved in the client's `03 Quotation and BOQ` folder (or in `Sample projects/Quotations` for a sample project). This uses the Chrome or Edge already on the computer. Print or save as PDF works without the server.
 
 Changes are saved to `data/state.json`. The sample projects are not saved, they stay in `index.html`. To reset before a demo, use Clear saved changes on the Today screen. Folders on disk are not touched by that.

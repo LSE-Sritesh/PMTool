@@ -11,7 +11,7 @@ const { spawn } = require("child_process");
 
 const APP_NAME = "Project Management Tool";
 const APP_DIR = __dirname;
-const DEFAULTS = { port: 3000, clientsRoot: "Clients", dataDir: "data" };
+const DEFAULTS = { port: 3000, clientsRoot: "Clients", samplesRoot: "Sample projects", dataDir: "data" };
 const MAX_BODY = 64 * 1024;
 const MAX_STATE = 1024 * 1024;
 const MAX_ROWS = 5000;
@@ -49,9 +49,12 @@ function loadConfig() {
   const port = Number(process.env.SITEBOOK_PORT || cfg.port) || DEFAULTS.port;
   const root = process.env.SITEBOOK_CLIENTS_ROOT || cfg.clientsRoot || DEFAULTS.clientsRoot;
   const data = process.env.SITEBOOK_DATA_DIR || cfg.dataDir || DEFAULTS.dataDir;
+  const samples = process.env.SITEBOOK_SAMPLES_ROOT || cfg.samplesRoot || DEFAULTS.samplesRoot;
   return {
     port,
     clientsRoot: path.resolve(APP_DIR, String(root)),
+    // PDFs and photos for the sample projects, which have no client folder. Kept out of Clients so that holds real clients only.
+    samplesRoot: path.resolve(APP_DIR, String(samples)),
     dataDir: path.resolve(APP_DIR, String(data)),
     browser: process.env.SITEBOOK_BROWSER || cfg.browser || "",
   };
@@ -398,10 +401,9 @@ async function quotePdf(req, res, cfg) {
     return send(res, 501, { ok: false, error: "No Chrome or Edge was found on this computer, so the PDF was not made. Use Print or save as PDF instead, or set \"browser\" in sitebook.config.json." });
   }
 
-  // Into the client's 03 folder when it exists, otherwise into Clients/Quotations
-  const root = cfg.clientsRoot;
-  fs.mkdirSync(root, { recursive: true });
-  const cf = clientFolder(root, b.code);
+  // Into the client's 03 folder when it exists, otherwise into Sample projects/Quotations
+  const cf = clientFolder(cfg.clientsRoot, b.code);
+  const root = cf ? cfg.clientsRoot : cfg.samplesRoot;
   const folder = cf ? path.join(cf, FOLDERS[2]) : path.join(root, "Quotations");
   fs.mkdirSync(folder, { recursive: true });
 
@@ -409,7 +411,7 @@ async function quotePdf(req, res, cfg) {
   let pdf = path.join(folder, base + ".pdf");
   for (let n = 2; fs.existsSync(pdf); n++) pdf = path.join(folder, `${base} (${n}).pdf`);
   if (!inside(root, pdf)) {
-    return send(res, 400, { ok: false, error: "That name would put the PDF outside the clients folder." });
+    return send(res, 400, { ok: false, error: "That name would put the PDF outside its folder." });
   }
 
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pmt-quote-"));
@@ -424,7 +426,7 @@ async function quotePdf(req, res, cfg) {
   }
 
   console.log(`Saved ${pdf}`);
-  send(res, 201, { ok: true, pdf, folder, where: path.relative(root, folder) });
+  send(res, 201, { ok: true, pdf, folder, where: cf ? path.relative(root, folder) : path.join(path.basename(root), "Quotations") });
 }
 
 // ---------- client view (PRD 7.4) ----------
@@ -475,9 +477,8 @@ async function savePhoto(req, res, cfg, query) {
   const buf = await readRaw(req, MAX_PHOTO);
   if (!buf.length) return send(res, 400, { ok: false, error: "The photo was empty." });
 
-  const root = cfg.clientsRoot;
-  fs.mkdirSync(root, { recursive: true });
-  const cf = clientFolder(root, query.get("code"));
+  const cf = clientFolder(cfg.clientsRoot, query.get("code"));
+  const root = cf ? cfg.clientsRoot : cfg.samplesRoot;
   const folder = cf ? path.join(cf, FOLDERS[5]) : path.join(root, "Site photos", safeName(query.get("title")) || "Project");
   fs.mkdirSync(folder, { recursive: true });
 
@@ -489,18 +490,19 @@ async function savePhoto(req, res, cfg, query) {
   let n = Math.max(1, Math.min(99, Number(query.get("n")) || 1));
   let file = path.join(folder, `${stamp} ${who} ${n}.${ext}`);
   while (fs.existsSync(file)) file = path.join(folder, `${stamp} ${who} ${++n}.${ext}`);
-  if (!inside(root, file)) return send(res, 400, { ok: false, error: "That name would put the photo outside the clients folder." });
+  if (!inside(root, file)) return send(res, 400, { ok: false, error: "That name would put the photo outside its folder." });
 
   fs.writeFileSync(file, buf, { flag: "wx" });
   send(res, 201, { ok: true, file: path.relative(root, file), name: path.basename(file) });
 }
 
+// A photo path is kept relative to the folder it was saved under. Look in Clients first, then in Sample projects.
 function servePhoto(cfg, query, res) {
   const rel = String(query.get("f") || "");
-  const file = path.resolve(cfg.clientsRoot, rel);
-  const ext = path.extname(file).toLowerCase().replace(".", "").replace("jpeg", "jpg");
+  const ext = path.extname(rel).toLowerCase().replace(".", "").replace("jpeg", "jpg");
   const type = Object.keys(PHOTO_TYPES).find((t) => PHOTO_TYPES[t] === ext);
-  if (!rel || !type || !inside(cfg.clientsRoot, file) || !fs.existsSync(file)) return send(res, 404, { ok: false, error: "Photo not found." });
+  const file = [cfg.clientsRoot, cfg.samplesRoot].map((r) => [r, path.resolve(r, rel)]).filter(([r, f]) => inside(r, f) && fs.existsSync(f)).map(([, f]) => f)[0];
+  if (!rel || !type || !file) return send(res, 404, { ok: false, error: "Photo not found." });
   fs.readFile(file, (err, buf) => {
     if (err) return send(res, 500, { ok: false, error: "The photo could not be read." });
     res.writeHead(200, { "Content-Type": type, "Content-Length": buf.length, "Cache-Control": "private, max-age=3600" });
@@ -598,6 +600,7 @@ function main() {
   v4.listen(cfg.port, "127.0.0.1", () => {
     console.log(`${APP_NAME} is running at ${url}`);
     console.log(`Client folders go in ${cfg.clientsRoot}`);
+    console.log(`Files for the sample projects go in ${cfg.samplesRoot}`);
     console.log(`Changes are saved in ${path.join(cfg.dataDir, "state.json")}`);
     const browser = findBrowser(cfg);
     console.log(browser ? `Quotation PDFs are made with ${browser}` : "No Chrome or Edge found, quotation PDFs are off. The Print button still works.");
