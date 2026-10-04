@@ -331,7 +331,7 @@ tr:last-child td{border-bottom:0}
         <div><label for="qTarget">Target margin %</label><input id="qTarget" type="number" value="20" min="0" step="0.5"></div>
       </form></div></div>
       <div class="panel" style="margin-top:14px"><div class="hd"><h3>Line items</h3><button class="btn sm" id="btnQuoteAdd">+ Add line</button></div>
-        <div class="tw"><table id="qLines"><thead><tr><th>Section</th><th style="min-width:220px">Description</th><th class="num">Qty</th><th>Unit</th><th class="num">Material cost</th><th class="num">Labour cost</th><th class="num">Material RM</th><th class="num">Labour RM</th><th class="num">Amount</th><th class="num">Margin</th><th></th></tr></thead><tbody></tbody></table></div>
+        <div class="tw"><table id="qLines"><thead><tr><th>Section</th><th style="min-width:220px">Description</th><th class="num">Qty</th><th>Unit</th><th class="num">Material cost</th><th class="num">Labour cost</th><th class="num">Material RM</th><th class="num">Labour RM</th><th class="num">Amount</th><th class="num">Margin</th><th></th></tr></thead><tbody></tbody><tfoot id="qFoot"></tfoot></table></div>
         <p class="sub" style="font-size:12.5px;margin:10px 16px 0">Cost is what SEMBA pays the supplier or subcontractor. Type a cost and the selling rate fills in from the markup above. Overtype the rate if you want a different price on that line. Costs and margins stay off the quotation the client sees.</p>
         <div class="bd" style="display:flex;justify-content:flex-end;gap:24px;font-variant-numeric:tabular-nums;flex-wrap:wrap" id="qLive"></div>
       </div>
@@ -816,9 +816,12 @@ function qTotals(){const n=id=>+$(id).value||0;
   const net=sub+cont-disc,profit0=sub+cont-cost,profit=net-cost;
   const bySec={};QL.forEach(r=>{const s=bySec[r.s]=bySec[r.s]||{name:r.s,sale:0,cost:0};s.sale+=r.q*(r.m+r.l);s.cost+=r.q*((r.mc||0)+(r.lc||0))});
   const sections=Object.values(bySec).map(s=>({...s,profit:s.sale-s.cost,margin:s.sale?(s.sale-s.cost)/s.sale:0}));
-  return{mat,lab,sub,cont,disc,sst,total,matCost,labCost,cost,net,profit0,profit,margin:net?profit/net:0,markup:cost?profit/cost:0,deposit:total*n("#qDep")/100,depRate:n("#qDep")/100,target:n("#qTarget")/100,sections}}
+  return{mat,lab,sub,cont,disc,sst,total,matCost,labCost,cost,net,profit0,profit,margin:net?profit/net:0,markup:cost?profit/cost:0,gross:sub?(sub-cost)/sub:0,deposit:total*n("#qDep")/100,depRate:n("#qDep")/100,target:n("#qTarget")/100,sections}}
 const qLineMargin=r=>{const sale=r.q*(r.m+r.l);return sale?(sale-r.q*((r.mc||0)+(r.lc||0)))/sale:0};
 const qPc=v=>Math.round(v*100)+"%";
+// one total under each money column, so cost and price can be checked side by side
+function qShowTotals(t){$("#qLive").innerHTML=qLiveHtml(t);const c=v=>`<td class="num" style="border-top:2px solid var(--navy);border-bottom:0"><b>${fmtRM(v)}</b></td>`,e=`<td style="border-top:2px solid var(--navy);border-bottom:0"></td>`;
+  $("#qFoot").innerHTML=`<tr>${e}<td style="border-top:2px solid var(--navy);border-bottom:0"><b>Totals</b></td>${e}${e}${c(t.matCost)}${c(t.labCost)}${c(t.mat)}${c(t.lab)}${c(t.sub)}<td class="num" style="border-top:2px solid var(--navy);border-bottom:0"><b>${qPc(t.gross)}</b></td>${e}</tr>`}
 function qLiveHtml(t){return `<span>Material <b>${fmtRM(t.mat)}</b></span><span>Labour <b>${fmtRM(t.lab)}</b></span><span>Service tax <b>${fmtRM(t.sst)}</b></span><span style="font-size:15px">Total <b>${fmtRM(t.total)}</b></span><span style="font-size:15px;color:var(--${t.margin<t.target?"bad":"ok"})">Profit <b>${fmtRM(t.profit)}</b> (${qPc(t.margin)})</span>`}
 function renderQLines(){
   $("#qLines tbody").innerHTML=QL.map((r,i)=>`<tr>
@@ -835,7 +838,7 @@ function renderQLines(){
    <td><button class="btn sm ghost" data-del="${i}" title="Remove line">&times;</button></td></tr>`).join("");
   $("#qLines").querySelectorAll("input,select").forEach(el=>el.style.cssText+=";font:inherit;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)");
   const t=qTotals();
-  $("#qLive").innerHTML=qLiveHtml(t);
+  qShowTotals(t);
   $("#qNo").textContent=qNumber()+" · "+TODAY.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
   renderQAnalysis(t);
 }
@@ -849,14 +852,14 @@ function renderQAnalysis(t){
   const secs=t.sections.slice().sort((a,b)=>a.margin-b.margin);
   $("#qAnalysisBody").innerHTML=`
     <div class="grid kpis">${tiles.map(([l,v,d,c])=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${esc(d)}</div></div>`).join("")}</div>
-    <div class="tw" style="margin-top:14px"><table><thead><tr><th>Section</th><th class="num">Cost</th><th class="num">Sale</th><th class="num">Profit</th><th class="num">Margin</th></tr></thead><tbody>${secs.map(s=>`<tr><td>${esc(s.name)}</td><td class="num">${fmtRM(s.cost)}</td><td class="num">${fmtRM(s.sale)}</td><td class="num">${fmtRM(s.profit)}</td><td class="num"><span class="pill ${under(s.margin)?"bad":"ok"}">${qPc(s.margin)}</span></td></tr>`).join("")}<tr><td><b>All lines</b></td><td class="num"><b>${fmtRM(t.cost)}</b></td><td class="num"><b>${fmtRM(t.sub)}</b></td><td class="num"><b>${fmtRM(t.sub-t.cost)}</b></td><td class="num"><b>${qPc(t.sub?(t.sub-t.cost)/t.sub:0)}</b></td></tr></tbody></table></div>`;
+    <div class="tw" style="margin-top:14px"><table><thead><tr><th>Section</th><th class="num">Cost</th><th class="num">Sale</th><th class="num">Profit</th><th class="num">Margin</th></tr></thead><tbody>${secs.map(s=>`<tr><td>${esc(s.name)}</td><td class="num">${fmtRM(s.cost)}</td><td class="num">${fmtRM(s.sale)}</td><td class="num">${fmtRM(s.profit)}</td><td class="num"><span class="pill ${under(s.margin)?"bad":"ok"}">${qPc(s.margin)}</span></td></tr>`).join("")}<tr><td><b>All lines</b></td><td class="num"><b>${fmtRM(t.cost)}</b></td><td class="num"><b>${fmtRM(t.sub)}</b></td><td class="num"><b>${fmtRM(t.sub-t.cost)}</b></td><td class="num"><b>${qPc(t.gross)}</b></td></tr></tbody></table></div>`;
 }
 $("#qLines").addEventListener("input",e=>{const el=e.target;if(!el.dataset.k)return;const r=QL[+el.dataset.i];const k=el.dataset.k,num=["q","m","l","mc","lc"];r[k]=num.includes(k)?(+el.value||0):el.value;
   if(!num.includes(k))return;
   const tr=el.closest("tr");
   // a cost sets the selling rate from the markup. The rate can still be overtyped afterwards.
   if(k==="mc"||k==="lc"){const rk=k==="mc"?"m":"l",mk=1+(+$("#qMarkup").value||0)/100;r[rk]=Math.round(r[k]*mk*100)/100;tr.querySelector(`[data-k=${rk}]`).value=r[rk]}
-  const t=qTotals();tr.children[8].innerHTML=`<b>${fmtRM(r.q*(r.m+r.l))}</b>`;tr.children[9].textContent=qPc(qLineMargin(r));$("#qLive").innerHTML=qLiveHtml(t);renderQAnalysis(t)});
+  const t=qTotals();tr.children[8].innerHTML=`<b>${fmtRM(r.q*(r.m+r.l))}</b>`;tr.children[9].textContent=qPc(qLineMargin(r));qShowTotals(t);renderQAnalysis(t)});
 $("#qLines").addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(b){QL.splice(+b.dataset.del,1);renderQLines()}});
 $("#qForm").addEventListener("input",e=>{if(["qCont","qDisc","qSst","qDep","qTarget"].includes(e.target.id))renderQLines()});
 $("#btnQuoteAdd").onclick=()=>{QL.push({s:QSECTIONS[0],d:"",q:1,u:"lot",m:0,l:0,mc:0,lc:0});renderQLines();const last=$("#qLines tbody tr:last-child input[data-k=d]");last&&last.focus()};
