@@ -816,9 +816,9 @@ function qTotals(){const n=id=>+$(id).value||0;
   const net=sub+cont-disc,profit0=sub+cont-cost,profit=net-cost;
   const bySec={};QL.forEach(r=>{const s=bySec[r.s]=bySec[r.s]||{name:r.s,sale:0,cost:0};s.sale+=r.q*(r.m+r.l);s.cost+=r.q*((r.mc||0)+(r.lc||0))});
   const sections=Object.values(bySec).map(s=>({...s,profit:s.sale-s.cost,margin:s.sale?(s.sale-s.cost)/s.sale:0}));
-  return{mat,lab,sub,cont,disc,sst,total,matCost,labCost,cost,net,profit0,profit,margin:net?profit/net:0,markup:cost?profit/cost:0,matShare:sub?mat/sub:0,deposit:total*n("#qDep")/100,target:n("#qTarget")/100,sections}}
+  return{mat,lab,sub,cont,disc,sst,total,matCost,labCost,cost,net,profit0,profit,margin:net?profit/net:0,markup:cost?profit/cost:0,deposit:total*n("#qDep")/100,depRate:n("#qDep")/100,target:n("#qTarget")/100,sections}}
 const qLineMargin=r=>{const sale=r.q*(r.m+r.l);return sale?(sale-r.q*((r.mc||0)+(r.lc||0)))/sale:0};
-const qPc=v=>Math.round(v*100)+" percent";
+const qPc=v=>Math.round(v*100)+"%";
 function qLiveHtml(t){return `<span>Material <b>${fmtRM(t.mat)}</b></span><span>Labour <b>${fmtRM(t.lab)}</b></span><span>Service tax <b>${fmtRM(t.sst)}</b></span><span style="font-size:15px">Total <b>${fmtRM(t.total)}</b></span><span style="font-size:15px;color:var(--${t.margin<t.target?"bad":"ok"})">Profit <b>${fmtRM(t.profit)}</b> (${qPc(t.margin)})</span>`}
 function renderQLines(){
   $("#qLines tbody").innerHTML=QL.map((r,i)=>`<tr>
@@ -845,14 +845,11 @@ function renderQAnalysis(t){
   const tiles=[
     ["Profit after discount",fmtRM(t.profit),`${qPc(t.margin)} margin, ${qPc(t.markup)} markup on cost`,under(t.margin)?"bad":"ok"],
     ["Profit before discount",fmtRM(t.profit0),t.disc?`The discount of ${fmtRM(t.disc)} costs ${fmtRM(t.profit0-t.profit)} of profit`:"No discount on this quotation",""],
-    ["Material against labour",`${Math.round(t.matShare*100)} / ${Math.round((1-t.matShare)*100)}`,`Percent of the sale. Service tax ${fmtRM(t.sst)} lands on labour only and is passed to the client, not profit`,""],
-    ["Deposit against material cost",fmtRM(t.deposit),t.matCost?`${qPc(t.deposit/t.matCost)} of the ${fmtRM(t.matCost)} SEMBA pays for materials`:"No material cost entered",t.deposit<t.matCost?"warn":"ok"]];
+    ["Deposit you collect",fmtRM(t.deposit),t.matCost?`${qPc(t.depRate)} of the quotation total of ${fmtRM(t.total)}. It covers ${qPc(t.deposit/t.matCost)} of the ${fmtRM(t.matCost)} you pay suppliers for materials`:`${qPc(t.depRate)} of the quotation total of ${fmtRM(t.total)}`,t.deposit<t.matCost?"warn":"ok"]];
   const secs=t.sections.slice().sort((a,b)=>a.margin-b.margin);
-  const low=secs.filter(s=>under(s.margin));
   $("#qAnalysisBody").innerHTML=`
     <div class="grid kpis">${tiles.map(([l,v,d,c])=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${esc(d)}</div></div>`).join("")}</div>
-    <p class="sub" style="font-size:12.5px;margin:14px 0 8px">${low.length?`${low.length===1?"One section is":low.length+" sections are"} under the ${qPc(t.target)} target margin. Weakest first.`:`Every section is at or above the ${qPc(t.target)} target margin. Weakest first.`} Margin is profit as a share of the sale. Markup is profit as a share of cost. Contingency counts as sale, it is SEMBA's if nothing goes wrong.</p>
-    <div class="tw"><table><thead><tr><th>Section</th><th class="num">Cost</th><th class="num">Sale</th><th class="num">Profit</th><th class="num">Margin</th></tr></thead><tbody>${secs.map(s=>`<tr><td>${esc(s.name)}</td><td class="num">${fmtRM(s.cost)}</td><td class="num">${fmtRM(s.sale)}</td><td class="num">${fmtRM(s.profit)}</td><td class="num"><span class="pill ${under(s.margin)?"bad":"ok"}">${qPc(s.margin)}</span></td></tr>`).join("")}<tr><td><b>All lines</b></td><td class="num"><b>${fmtRM(t.cost)}</b></td><td class="num"><b>${fmtRM(t.sub)}</b></td><td class="num"><b>${fmtRM(t.sub-t.cost)}</b></td><td class="num"><b>${qPc(t.sub?(t.sub-t.cost)/t.sub:0)}</b></td></tr></tbody></table></div>`;
+    <div class="tw" style="margin-top:14px"><table><thead><tr><th>Section</th><th class="num">Cost</th><th class="num">Sale</th><th class="num">Profit</th><th class="num">Margin</th></tr></thead><tbody>${secs.map(s=>`<tr><td>${esc(s.name)}</td><td class="num">${fmtRM(s.cost)}</td><td class="num">${fmtRM(s.sale)}</td><td class="num">${fmtRM(s.profit)}</td><td class="num"><span class="pill ${under(s.margin)?"bad":"ok"}">${qPc(s.margin)}</span></td></tr>`).join("")}<tr><td><b>All lines</b></td><td class="num"><b>${fmtRM(t.cost)}</b></td><td class="num"><b>${fmtRM(t.sub)}</b></td><td class="num"><b>${fmtRM(t.sub-t.cost)}</b></td><td class="num"><b>${qPc(t.sub?(t.sub-t.cost)/t.sub:0)}</b></td></tr></tbody></table></div>`;
 }
 $("#qLines").addEventListener("input",e=>{const el=e.target;if(!el.dataset.k)return;const r=QL[+el.dataset.i];const k=el.dataset.k,num=["q","m","l","mc","lc"];r[k]=num.includes(k)?(+el.value||0):el.value;
   if(!num.includes(k))return;
